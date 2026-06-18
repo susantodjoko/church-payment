@@ -1,0 +1,16 @@
+{% if members %}
+<ul class="list-group position-absolute w-100 z-3 shadow">
+  {% for m in members %}
+  <li class="list-group-item list-group-item-action"
+      style="cursor:pointer"
+      onclick="selectMember({{ m.pk }}, '{{ m.full_name }} ({{ m.member_id }}) - {{ m.lingkungan.name }}')">
+    <strong>{{ m.full_name }}</strong>
+    <small class="text-muted ms-2">{{ m.member_id }} — {{ m.lingkungan.name }}</small>
+  </li>
+  {% endfor %}
+</ul>
+{% elif q|length >= 2 %}
+<ul class="list-group position-absolute w-100 z-3">
+  <li class="list-group-item text-muted">Tidak ditemukan.</li>
+</ul>
+{% endif %}

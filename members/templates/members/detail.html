@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ member.full_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>{{ member.full_name }}</h3>
+  {% if is_super_admin %}
+  <a href="/members/{{ member.pk }}/edit/" class="btn btn-outline-secondary">Edit</a>
+  {% endif %}
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <dl class="row">
+      <dt class="col-sm-4">ID Anggota</dt><dd class="col-sm-8">{{ member.member_id }}</dd>
+      <dt class="col-sm-4">Jenis Kelamin</dt><dd class="col-sm-8">{{ member.get_gender_display }}</dd>
+      <dt class="col-sm-4">Tgl Lahir</dt><dd class="col-sm-8">{{ member.date_of_birth|default:"-" }}</dd>
+      <dt class="col-sm-4">Telepon</dt><dd class="col-sm-8">{{ member.phone|default:"-" }}</dd>
+      <dt class="col-sm-4">Alamat</dt><dd class="col-sm-8">{{ member.address|default:"-" }}</dd>
+      <dt class="col-sm-4">Lingkungan</dt><dd class="col-sm-8">{{ member.lingkungan }}</dd>
+      <dt class="col-sm-4">Bergabung</dt><dd class="col-sm-8">{{ member.join_date }}</dd>
+      <dt class="col-sm-4">Status</dt><dd class="col-sm-8">
+        {% if member.is_active %}<span class="badge bg-success">Aktif</span>
+        {% else %}<span class="badge bg-secondary">Nonaktif</span>{% endif %}
+      </dd>
+    </dl>
+  </div>
+</div>
+
+<h5>Riwayat Pembayaran</h5>
+<div class="table-responsive">
+  <table class="table table-sm table-striped">
+    <thead class="table-light">
+      <tr><th>Periode</th><th>Jenis</th><th>Jumlah (Rp)</th><th>Tgl Bayar</th><th>Dicatat oleh</th></tr>
+    </thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td>{{ p.period_month }}/{{ p.period_year }}</td>
+        <td>{{ p.payment_type.name }}</td>
+        <td>{{ p.amount|floatformat:0 }}</td>
+        <td>{{ p.date_paid|date:"d M Y H:i" }}</td>
+        <td>{{ p.recorded_by.get_full_name|default:p.recorded_by.username }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-muted">Belum ada pembayaran.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

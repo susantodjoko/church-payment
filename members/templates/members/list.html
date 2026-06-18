@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Daftar Anggota{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Daftar Anggota</h3>
+  {% if is_super_admin %}
+  <a href="/members/new/" class="btn btn-primary">+ Tambah Anggota</a>
+  {% endif %}
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-md-4">
+    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Cari nama...">
+  </div>
+  <div class="col-md-3">
+    <select name="wilayah" class="form-select">
+      <option value="">Semua Wilayah</option>
+      {% for w in wilayah_list %}
+      <option value="{{ w.pk }}" {% if request.GET.wilayah == w.pk|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select name="lingkungan" class="form-select">
+      <option value="">Semua Lingkungan</option>
+      {% for l in lingkungan_list %}
+      <option value="{{ l.pk }}" {% if request.GET.lingkungan == l.pk|stringformat:"s" %}selected{% endif %}>{{ l }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="btn btn-outline-secondary w-100">Filter</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th><th>Nama</th><th>Lingkungan</th><th>Wilayah</th><th>Telp</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in members %}
+      <tr>
+        <td>{{ m.member_id }}</td>
+        <td>{{ m.full_name }}</td>
+        <td>{{ m.lingkungan.name }}</td>
+        <td>{{ m.lingkungan.wilayah.name }}</td>
+        <td>{{ m.phone|default:"-" }}</td>
+        <td>
+          <a href="/members/{{ m.pk }}/" class="btn btn-sm btn-outline-primary">Detail</a>
+          {% if is_super_admin %}
+          <a href="/members/{{ m.pk }}/edit/" class="btn btn-sm btn-outline-secondary">Edit</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-center text-muted">Tidak ada anggota ditemukan.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
