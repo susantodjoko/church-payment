@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Laporan{% endblock %}
+{% block content %}
+<h3>Laporan</h3>
+<div class="row g-3 mt-2">
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">Laporan Bulanan</h5>
+        <p class="text-muted">Rincian pembayaran per bulan, dikelompokkan per Wilayah/Lingkungan.</p>
+        <a href="/reports/monthly/" class="btn btn-primary">Buka</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">Laporan Tahunan</h5>
+        <p class="text-muted">Rekap bulanan dan ringkasan per anggota selama satu tahun.</p>
+        <a href="/reports/annual/" class="btn btn-primary">Buka</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title">Anggota Belum Bayar</h5>
+        <p class="text-muted">Daftar anggota yang belum membayar untuk periode tertentu.</p>
+        <a href="/reports/unpaid/" class="btn btn-warning">Buka</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

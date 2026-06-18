@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Anggota Belum Bayar{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3>Anggota Belum Bayar</h3>
+  <a href="/reports/export/unpaid/?month={{ month }}&year={{ year }}&payment_type={{ payment_type_id }}"
+     class="btn btn-success">&#11015; Export Excel</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="month" class="form-select">
+      {% for m in months %}
+      <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="year" class="form-select">
+      {% for y in years %}
+      <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="payment_type" class="form-select">
+      <option value="">Semua Jenis</option>
+      {% for pt in payment_types %}
+      <option value="{{ pt.pk }}" {% if payment_type_id == pt.pk|stringformat:"s" %}selected{% endif %}>{{ pt.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-outline-secondary">Filter</button>
+  </div>
+</form>
+
+<div class="alert alert-warning">
+  <strong>{{ unpaid_members|length }}</strong> anggota belum membayar untuk periode {{ month }}/{{ year }}.
+</div>
+
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead class="table-dark">
+      <tr><th>No</th><th>ID</th><th>Nama</th><th>Lingkungan</th><th>Wilayah</th><th>Telepon</th></tr>
+    </thead>
+    <tbody>
+      {% for m in unpaid_members %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ m.member_id }}</td>
+        <td><a href="/members/{{ m.pk }}/">{{ m.full_name }}</a></td>
+        <td>{{ m.lingkungan.name }}</td>
+        <td>{{ m.lingkungan.wilayah.name }}</td>
+        <td>{{ m.phone|default:"-" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-center text-success">Semua anggota sudah membayar!</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
