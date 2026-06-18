@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Jenis Pembayaran{% endblock %}
+{% block content %}
+<h3>Jenis Pembayaran</h3>
+<div class="row mt-3">
+  <div class="col-md-7">
+    <table class="table table-striped">
+      <thead class="table-dark"><tr><th>Nama</th><th>Default</th><th>Aktif</th></tr></thead>
+      <tbody>
+        {% for pt in payment_types %}
+        <tr>
+          <td>{{ pt.name }}</td>
+          <td>{% if pt.is_default %}<span class="badge bg-secondary">Ya</span>{% else %}-{% endif %}</td>
+          <td>{% if pt.is_active %}<span class="badge bg-success">Aktif</span>
+              {% else %}<span class="badge bg-danger">Nonaktif</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header">Tambah Jenis Pembayaran</div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="mb-2">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

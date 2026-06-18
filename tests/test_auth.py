@@ -45,3 +45,23 @@ class AuthTest(TestCase):
         self.client.login(username='treas1', password='pass')
         response = self.client.get('/')
         self.assertFalse(response.context['is_super_admin'])
+
+
+class SettingsAdminAccessTest(TestCase):
+    def setUp(self):
+        admin_group = Group.objects.get_or_create(name='Super Admin')[0]
+        treasurer_group = Group.objects.get_or_create(name='Treasurer')[0]
+        self.admin = User.objects.create_user('admin', password='pass')
+        self.admin.groups.add(admin_group)
+        self.treasurer = User.objects.create_user('treasurer', password='pass')
+        self.treasurer.groups.add(treasurer_group)
+
+    def test_admin_can_access_settings_users(self):
+        self.client.login(username='admin', password='pass')
+        response = self.client.get('/settings/users/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_treasurer_cannot_access_settings_users(self):
+        self.client.login(username='treasurer', password='pass')
+        response = self.client.get('/settings/users/')
+        self.assertEqual(response.status_code, 403)

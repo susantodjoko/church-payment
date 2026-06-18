@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Manajemen Pengguna{% endblock %}
+{% block content %}
+<h3>Manajemen Pengguna</h3>
+
+<div class="row mt-3">
+  <div class="col-md-7">
+    <table class="table table-striped">
+      <thead class="table-dark"><tr><th>Username</th><th>Nama</th><th>Email</th><th>Role</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td>{{ u.get_full_name|default:"-" }}</td>
+          <td>{{ u.email|default:"-" }}</td>
+          <td>{% for g in u.groups.all %}{{ g.name }}{% empty %}-{% endfor %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header">Tambah Pengguna</div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="mb-2">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div class="text-danger small">{{ field.errors|join:", " }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

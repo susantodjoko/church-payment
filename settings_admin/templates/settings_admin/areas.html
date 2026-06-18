@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Wilayah & Lingkungan{% endblock %}
+{% block content %}
+<h3>Wilayah &amp; Lingkungan</h3>
+<div class="row mt-3">
+  <div class="col-md-5">
+    <h5>Wilayah</h5>
+    <table class="table table-sm table-striped mb-3">
+      <thead class="table-dark"><tr><th>Nama</th></tr></thead>
+      <tbody>
+        {% for w in wilayah_list %}
+        <tr><td>{{ w.name }}</td></tr>
+        {% empty %}
+        <tr><td class="text-muted">Belum ada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="post">{% csrf_token %}
+      <div class="input-group">
+        {{ wilayah_form.name }}
+        <button type="submit" name="add_wilayah" class="btn btn-primary">+ Tambah</button>
+      </div>
+    </form>
+  </div>
+  <div class="col-md-7">
+    <h5>Lingkungan</h5>
+    <table class="table table-sm table-striped mb-3">
+      <thead class="table-dark"><tr><th>Nama</th><th>Wilayah</th></tr></thead>
+      <tbody>
+        {% for l in lingkungan_list %}
+        <tr><td>{{ l.name }}</td><td>{{ l.wilayah.name }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" class="text-muted">Belum ada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="post" class="row g-2">{% csrf_token %}
+      <div class="col-6">{{ lingkungan_form.name }}</div>
+      <div class="col-4">{{ lingkungan_form.wilayah }}</div>
+      <div class="col-2">
+        <button type="submit" name="add_lingkungan" class="btn btn-primary w-100">+</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
