@@ -1,5 +1,4 @@
 from django.test import TestCase
-from payments.models import PaymentType
 from django.contrib.auth.models import User
 from members.models import Wilayah, Lingkungan, Member
 from payments.models import Payment, PaymentType
@@ -40,9 +39,9 @@ class PaymentModelTest(TestCase):
     def test_advance_payment_different_period(self):
         p = Payment.objects.create(
             member=self.member, payment_type=self.pt, amount=50000,
-            date_paid=timezone.now(), period_month=9, period_year=2026,
+            date_paid=timezone.now(), period_month=1, period_year=2026,
             recorded_by=self.user)
-        self.assertEqual(p.period_month, 9)
+        self.assertEqual(p.period_month, 1)
         self.assertNotEqual(p.date_paid.month, p.period_month)
 
 

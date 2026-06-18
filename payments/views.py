@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from members.models import Member
+from members.models import Member, Wilayah, Lingkungan
 from .models import Payment, PaymentType
 from .forms import PaymentForm
 
@@ -33,9 +33,6 @@ def record_payment(request):
 
 @login_required
 def payment_list(request):
-    from members.models import Wilayah, Lingkungan
-    from django.utils import timezone
-
     now = timezone.localtime(timezone.now())
     month = int(request.GET.get('month', now.month))
     year = int(request.GET.get('year', now.year))

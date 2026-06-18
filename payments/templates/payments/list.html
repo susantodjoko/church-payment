@@ -37,6 +37,14 @@
       {% endfor %}
     </select>
   </div>
+  <div class="col-auto">
+    <select name="lingkungan" class="form-select">
+      <option value="">Semua Lingkungan</option>
+      {% for l in lingkungan_list %}
+      <option value="{{ l.pk }}" {% if request.GET.lingkungan == l.pk|stringformat:"s" %}selected{% endif %}>{{ l }}</option>
+      {% endfor %}
+    </select>
+  </div>
 </div>
 
 <div id="payment-table-body">
