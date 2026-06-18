@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Catat Pembayaran{% endblock %}
+{% block content %}
+<h3>Catat Pembayaran</h3>
+<form method="post" class="mt-3" style="max-width:600px">
+  {% csrf_token %}
+  <input type="hidden" name="member_id" id="member-id-hidden" value="">
+
+  <div class="mb-3 position-relative">
+    <label class="form-label">Anggota *</label>
+    <input type="text" id="member-search-input" class="form-control"
+           placeholder="Ketik nama anggota..."
+           autocomplete="off"
+           hx-get="/members/search/"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#search-results"
+           name="q">
+    <div id="search-results" class="position-relative"></div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Jenis Pembayaran *</label>
+    {{ form.payment_type }}
+  </div>
+  <div class="row g-3 mb-3">
+    <div class="col-6">
+      <label class="form-label">Bulan Periode *</label>
+      {{ form.period_month }}
+    </div>
+    <div class="col-6">
+      <label class="form-label">Tahun Periode *</label>
+      {{ form.period_year }}
+    </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Jumlah (Rp) *</label>
+    {{ form.amount }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Tanggal &amp; Waktu Bayar *</label>
+    {{ form.date_paid }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Catatan</label>
+    {{ form.notes }}
+  </div>
+
+  <button type="submit" class="btn btn-primary">Simpan</button>
+  <a href="/payments/" class="btn btn-outline-secondary ms-2">Batal</a>
+</form>
+
+<script>
+function selectMember(id, label) {
+  document.getElementById('member-id-hidden').value = id;
+  document.getElementById('member-search-input').value = label;
+  document.getElementById('search-results').innerHTML = '';
+}
+</script>
+{% endblock %}

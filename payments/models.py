@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class PaymentType(models.Model):
@@ -12,3 +13,20 @@ class PaymentType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Payment(models.Model):
+    member = models.ForeignKey('members.Member', on_delete=models.PROTECT, related_name='payments')
+    payment_type = models.ForeignKey(PaymentType, on_delete=models.PROTECT)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date_paid = models.DateTimeField()
+    period_month = models.IntegerField()
+    period_year = models.IntegerField()
+    recorded_by = models.ForeignKey(User, on_delete=models.PROTECT)
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-period_year', '-period_month']
+
+    def __str__(self):
+        return f'{self.member.full_name} — {self.period_month}/{self.period_year}'

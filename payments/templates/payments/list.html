@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Daftar Pembayaran{% endblock %}
+{% block content %}
+<h3>Daftar Pembayaran</h3>
+<div class="row g-2 mb-3"
+     hx-get="/payments/"
+     hx-trigger="change from:select, change from:input[type=number]"
+     hx-target="#payment-table-body"
+     hx-include="[name='month'],[name='year'],[name='payment_type'],[name='wilayah'],[name='lingkungan']">
+  <div class="col-auto">
+    <select name="month" class="form-select">
+      {% for m in months %}
+      <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="year" class="form-select">
+      {% for y in years %}
+      <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="payment_type" class="form-select">
+      <option value="">Semua Jenis</option>
+      {% for pt in payment_types %}
+      <option value="{{ pt.pk }}" {% if selected_payment_type == pt.pk|stringformat:"s" %}selected{% endif %}>{{ pt.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="wilayah" class="form-select">
+      <option value="">Semua Wilayah</option>
+      {% for w in wilayah_list %}
+      <option value="{{ w.pk }}">{{ w.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+<div id="payment-table-body">
+  {% include 'payments/partials/payment_table.html' %}
+</div>
+{% endblock %}
