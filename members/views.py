@@ -1,7 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
-from django.utils.decorators import method_decorator
 from django.views import View
 from church_payment.mixins import SuperAdminRequired
 from .models import Member, Wilayah, Lingkungan
