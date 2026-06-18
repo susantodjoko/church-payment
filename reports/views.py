@@ -164,7 +164,13 @@ def export_unpaid(request):
     unpaid = list(Member.objects.filter(is_active=True).exclude(
         pk__in=paid_ids).select_related('lingkungan__wilayah'))
 
-    pt_name = PaymentType.objects.get(pk=pt_id).name if pt_id else 'Semua'
+    if pt_id:
+        try:
+            pt_name = PaymentType.objects.get(pk=pt_id).name
+        except PaymentType.DoesNotExist:
+            pt_name = 'Semua'
+    else:
+        pt_name = 'Semua'
     buf = build_unpaid_excel(unpaid, month, year, pt_name)
     response = HttpResponse(buf.read(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
