@@ -1,5 +1,80 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h1>Dashboard</h1>
+<h3 class="mb-4">Dashboard — {{ month }}/{{ year }}</h3>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card text-white bg-primary">
+      <div class="card-body">
+        <h6 class="card-title">Total Terkumpul Bulan Ini</h6>
+        <h4>Rp {{ total_collected|floatformat:0 }}</h4>
+        <small>{{ transaction_count }} transaksi</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-danger">
+      <div class="card-body">
+        <h6 class="card-title">Belum Bayar</h6>
+        <h4>{{ unpaid_count }}</h4>
+        <small>dari {{ total_members }} anggota aktif</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-success">
+      <div class="card-body">
+        <h6 class="card-title">Total Anggota Aktif</h6>
+        <h4>{{ total_members }}</h4>
+        <small><a href="/members/" class="text-white">Lihat semua &rarr;</a></small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-secondary">
+      <div class="card-body">
+        <h6 class="card-title">Aksi Cepat</h6>
+        <a href="/payments/new/" class="btn btn-light btn-sm d-block mb-1">+ Catat Pembayaran</a>
+        <a href="/reports/unpaid/?month={{ month }}&year={{ year }}" class="btn btn-outline-light btn-sm d-block">Lihat Belum Bayar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if wilayah_stats %}
+<h5>Rekap per Wilayah (Bulan Ini)</h5>
+<div class="table-responsive mb-4">
+  <table class="table table-sm table-bordered">
+    <thead class="table-light"><tr><th>Wilayah</th><th>Total (Rp)</th></tr></thead>
+    <tbody>
+      {% for stat in wilayah_stats %}
+      <tr><td>{{ stat.wilayah.name }}</td><td>{{ stat.total|floatformat:0 }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<h5>10 Pembayaran Terakhir</h5>
+<div class="table-responsive">
+  <table class="table table-sm table-hover">
+    <thead class="table-light">
+      <tr><th>Anggota</th><th>Jenis</th><th>Periode</th><th>Jumlah (Rp)</th><th>Waktu</th></tr>
+    </thead>
+    <tbody>
+      {% for p in recent_payments %}
+      <tr>
+        <td><a href="/members/{{ p.member.pk }}/">{{ p.member.full_name }}</a></td>
+        <td>{{ p.payment_type.name }}</td>
+        <td>{{ p.period_month }}/{{ p.period_year }}</td>
+        <td>{{ p.amount|floatformat:0 }}</td>
+        <td>{{ p.date_paid|date:"d M Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-muted">Belum ada pembayaran.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
