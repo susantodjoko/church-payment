@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.db import models
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.views import View
+from church_payment.mixins import SuperAdminRequired
 from members.models import Member, Wilayah, Lingkungan, Keluarga
 from .models import Payment, PaymentType
 from .forms import PaymentForm, PKSS_TYPE_NAME, KARTU_KUNING_TYPE_NAME
@@ -158,3 +160,51 @@ def batch_report(request):
     ).update(date_reported=now)
     messages.success(request, f'{updated} pembayaran berhasil dilaporkan ke Bendahara Utama.')
     return redirect('payment_list')
+
+
+class LaporanMasukView(SuperAdminRequired, View):
+    def get(self, request):
+        # Group unconfirmed payments by (recorded_by, date_reported date)
+        pending = Payment.objects.filter(
+            date_reported__isnull=False,
+            date_confirmed__isnull=True,
+        ).select_related(
+            'member__lingkungan', 'keluarga__lingkungan',
+            'payment_type', 'recorded_by'
+        ).order_by('recorded_by__username', 'date_reported')
+
+        # Group into batches: (treasurer, date_reported_date) → [payments]
+        batches = {}
+        for p in pending:
+            key = (p.recorded_by, p.date_reported.date())
+            batches.setdefault(key, []).append(p)
+
+        return render(request, 'payments/laporan_masuk.html', {
+            'batches': [
+                {
+                    'treasurer': k[0],
+                    'date_reported': k[1],
+                    'payments': v,
+                    'total': sum(p.amount for p in v),
+                }
+                for k, v in batches.items()
+            ]
+        })
+
+
+@login_required
+def confirm_laporan(request):
+    if request.method != 'POST':
+        return redirect('laporan_masuk')
+    payment_ids = request.POST.getlist('payment_ids')
+    if not payment_ids:
+        messages.error(request, 'Tidak ada pembayaran yang dipilih.')
+        return redirect('laporan_masuk')
+    now = timezone.now()
+    updated = Payment.objects.filter(
+        pk__in=payment_ids,
+        date_reported__isnull=False,
+        date_confirmed__isnull=True,
+    ).update(date_confirmed=now, confirmed_by=request.user)
+    messages.success(request, f'{updated} pembayaran berhasil dikonfirmasi.')
+    return redirect('laporan_masuk')

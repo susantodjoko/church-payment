@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load idr_filters %}
+{% block title %}Laporan Masuk{% endblock %}
+{% block content %}
+<h3>Laporan Masuk</h3>
+<p class="text-muted">Pembayaran yang telah dilaporkan oleh bendahara dan menunggu konfirmasi.</p>
+
+{% if not batches %}
+<div class="alert alert-success">Tidak ada laporan yang menunggu konfirmasi.</div>
+{% endif %}
+
+{% for batch in batches %}
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <strong>{{ batch.treasurer.get_full_name|default:batch.treasurer.username }}</strong>
+      <span class="text-muted ms-2">dilaporkan {{ batch.date_reported }}</span>
+    </div>
+    <span class="badge bg-secondary">{{ batch.payments|length }} transaksi — Rp {{ batch.total|idr }}</span>
+  </div>
+  <div class="card-body p-0">
+    <form method="post" action="{% url 'confirm_laporan' %}">
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th><input type="checkbox" class="batch-select-all"></th>
+              <th>Anggota / KK</th><th>Lingkungan</th><th>Jenis</th>
+              <th>Jumlah (Rp)</th><th>Tgl Terima</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in batch.payments %}
+            <tr>
+              <td><input type="checkbox" name="payment_ids" value="{{ p.pk }}" checked></td>
+              <td>
+                {% if p.member %}{{ p.member.full_name }}
+                {% else %}{{ p.keluarga }}{% endif %}
+              </td>
+              <td>
+                {% if p.member %}{{ p.member.lingkungan.name }}
+                {% else %}{{ p.keluarga.lingkungan.name }}{% endif %}
+              </td>
+              <td>{{ p.payment_type.name }}</td>
+              <td>{{ p.amount|idr }}</td>
+              <td>{{ p.date_received|date:"d M Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer">
+        <button type="submit" class="btn btn-success btn-sm"
+                onclick="return confirm('Konfirmasi laporan ini?')">
+          &#10003; Konfirmasi
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+document.querySelectorAll('.batch-select-all').forEach(cb => {
+  cb.addEventListener('change', function() {
+    this.closest('form').querySelectorAll('input[name="payment_ids"]')
+      .forEach(c => c.checked = this.checked);
+  });
+});
+</script>
+{% endblock %}
