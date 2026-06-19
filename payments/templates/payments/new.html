@@ -8,13 +8,18 @@
 
   <div class="mb-3 position-relative">
     <label class="form-label">Anggota *</label>
-    <input type="text" id="member-search-input" class="form-control"
-           placeholder="Ketik nama anggota..."
-           autocomplete="off"
-           hx-get="/members/search/"
-           hx-trigger="keyup changed delay:300ms"
-           hx-target="#search-results"
-           name="q">
+    <div class="position-relative">
+      <input type="text" id="member-search-input" class="form-control"
+             placeholder="Ketik nama anggota..."
+             autocomplete="off"
+             hx-get="/members/search/"
+             hx-trigger="keyup changed delay:300ms"
+             hx-target="#search-results"
+             hx-indicator="#search-spinner"
+             name="q">
+      <span id="search-spinner" class="htmx-indicator spinner-border spinner-border-sm text-secondary position-absolute"
+            style="right:10px;top:10px" role="status"></span>
+    </div>
     <div id="search-results" class="position-relative"></div>
   </div>
 
@@ -55,5 +60,10 @@ function selectMember(id, label) {
   document.getElementById('member-search-input').value = label;
   document.getElementById('search-results').innerHTML = '';
 }
+{% if prefill_member %}
+document.addEventListener('DOMContentLoaded', function() {
+  selectMember('{{ prefill_member.pk }}', '{{ prefill_member.full_name }} ({{ prefill_member.member_id }})');
+});
+{% endif %}
 </script>
 {% endblock %}

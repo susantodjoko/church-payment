@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load idr_filters %}
 {% block title %}{{ member.full_name }}{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -37,7 +38,7 @@
       <tr>
         <td>{{ p.period_month }}/{{ p.period_year }}</td>
         <td>{{ p.payment_type.name }}</td>
-        <td>{{ p.amount|floatformat:0 }}</td>
+        <td>{{ p.amount|idr }}</td>
         <td>{{ p.date_paid|date:"d M Y H:i" }}</td>
         <td>{{ p.recorded_by.get_full_name|default:p.recorded_by.username }}</td>
       </tr>

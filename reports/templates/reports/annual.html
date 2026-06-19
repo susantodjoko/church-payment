@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load idr_filters %}
 {% block title %}Laporan Tahunan{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -30,14 +31,14 @@
       <tr>
         <td>{{ row.month }}/{{ year }}</td>
         <td>{{ row.count }}</td>
-        <td>{{ row.total|floatformat:0 }}</td>
+        <td>{{ row.total|idr }}</td>
       </tr>
       {% endfor %}
     </tbody>
     <tfoot>
       <tr class="table-info fw-bold">
         <td colspan="2">Grand Total</td>
-        <td>{{ grand_total|floatformat:0 }}</td>
+        <td>{{ grand_total|idr }}</td>
       </tr>
     </tfoot>
   </table>

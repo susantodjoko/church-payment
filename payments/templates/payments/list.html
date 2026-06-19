@@ -2,10 +2,11 @@
 {% block title %}Daftar Pembayaran{% endblock %}
 {% block content %}
 <h3>Daftar Pembayaran</h3>
-<div class="row g-2 mb-3"
+<div class="row g-2 mb-3 align-items-center"
      hx-get="/payments/"
      hx-trigger="change from:select, change from:input[type=number]"
      hx-target="#payment-table-body"
+     hx-indicator="#table-spinner"
      hx-include="[name='month'],[name='year'],[name='payment_type'],[name='wilayah'],[name='lingkungan']">
   <div class="col-auto">
     <select name="month" class="form-select">
@@ -44,6 +45,12 @@
       <option value="{{ l.pk }}" {% if request.GET.lingkungan == l.pk|stringformat:"s" %}selected{% endif %}>{{ l }}</option>
       {% endfor %}
     </select>
+  </div>
+  <div class="col-auto">
+    <a href="/payments/" class="btn btn-outline-secondary">Reset</a>
+  </div>
+  <div class="col-auto">
+    <span id="table-spinner" class="htmx-indicator spinner-border spinner-border-sm text-secondary" role="status"></span>
   </div>
 </div>
 

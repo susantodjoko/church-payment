@@ -21,6 +21,19 @@ def record_payment(request):
             payment = form.save(commit=False)
             payment.member = member
             payment.recorded_by = request.user
+            duplicate = Payment.objects.filter(
+                member=member,
+                payment_type=payment.payment_type,
+                period_month=payment.period_month,
+                period_year=payment.period_year,
+            ).exists()
+            if duplicate:
+                messages.error(
+                    request,
+                    f'Pembayaran {payment.payment_type} untuk {member.full_name} '
+                    f'periode {payment.period_month}/{payment.period_year} sudah pernah dicatat.'
+                )
+                return render(request, 'payments/new.html', {'form': form})
             payment.save()
             messages.success(request, f'Pembayaran untuk {member.full_name} berhasil dicatat.')
             return redirect('payment_list')
@@ -28,7 +41,15 @@ def record_payment(request):
             messages.error(request, 'Periksa kembali data yang dimasukkan.')
     else:
         form = PaymentForm()
-    return render(request, 'payments/new.html', {'form': form})
+
+    prefill_member = None
+    if request.method == 'GET' and request.GET.get('member_id'):
+        try:
+            prefill_member = Member.objects.get(pk=request.GET.get('member_id'))
+        except Member.DoesNotExist:
+            pass
+
+    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
 
 
 @login_required

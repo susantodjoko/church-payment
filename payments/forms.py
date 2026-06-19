@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MinValueValidator
 from django.utils import timezone
 from .models import Payment, PaymentType
 
@@ -40,3 +41,4 @@ class PaymentForm(forms.ModelForm):
         self.fields['notes'].required = False
         self.fields['member_display'].required = False
         self.fields['member_id'].required = False
+        self.fields['amount'].validators.append(MinValueValidator(1))

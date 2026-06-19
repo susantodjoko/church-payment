@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load idr_filters %}
 {% block title %}Laporan Bulanan{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -36,7 +37,7 @@
 </form>
 
 <div class="alert alert-info">
-  Total: <strong>Rp {{ total|floatformat:0 }}</strong> dari {{ payments|length }} transaksi
+  Total: <strong>Rp {{ total|idr }}</strong> dari {{ payments|length }} transaksi
 </div>
 
 <div class="table-responsive">
@@ -51,7 +52,7 @@
         <td>{{ p.member.lingkungan.name }}</td>
         <td>{{ p.member.lingkungan.wilayah.name }}</td>
         <td>{{ p.payment_type.name }}</td>
-        <td>{{ p.amount|floatformat:0 }}</td>
+        <td>{{ p.amount|idr }}</td>
         <td>{{ p.date_paid|date:"d M Y" }}</td>
       </tr>
       {% empty %}
