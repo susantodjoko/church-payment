@@ -163,13 +163,18 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Done (without payments)."))
             return
 
-        payment_types = list(PaymentType.objects.filter(is_active=True))
-        if not payment_types:
-            self.stdout.write(
-                self.style.WARNING("No active payment types found — skipping payments.")
-            )
-            self.stdout.write(self.style.SUCCESS("Done (without payments)."))
-            return
+        # Ensure only the two correct payment types are active
+        PaymentType.objects.exclude(
+            name__in=['Iuran PKSS', 'Iuran Kartu Kuning']
+        ).update(is_active=False)
+        pkss, _ = PaymentType.objects.get_or_create(
+            name='Iuran PKSS',
+            defaults={'description': 'Iuran PKSS per anggota', 'is_active': True}
+        )
+        # Ensure it is active even if it already existed but was deactivated
+        if not pkss.is_active:
+            pkss.is_active = True
+            pkss.save()
 
         self.stdout.write("Creating payments for last 6 months...")
         today = date.today()
@@ -181,28 +186,27 @@ class Command(BaseCommand):
                 if month <= 0:
                     month += 12
                     year -= 1
-                # Each member pays 1-2 random payment types per month
-                chosen_types = random.sample(payment_types, k=min(2, len(payment_types)))
-                for pt in chosen_types:
-                    if Payment.objects.filter(
-                        member=member, payment_type=pt, period_month=month, period_year=year
-                    ).exists():
-                        continue
-                    amount = Decimal(str(random.choice([50000, 75000, 100000, 150000, 200000])))
-                    pay_day = random.randint(1, 28)
-                    date_paid = timezone.make_aware(
-                        timezone.datetime(year, month, pay_day, 9, 0)
-                    )
-                    Payment.objects.create(
-                        member=member,
-                        payment_type=pt,
-                        amount=amount,
-                        date_paid=date_paid,
-                        period_month=month,
-                        period_year=year,
-                        recorded_by=recorder,
-                    )
-                    payments_created += 1
+                if Payment.objects.filter(
+                    member=member, keluarga=None, payment_type=pkss,
+                    period_month=month, period_year=year
+                ).exists():
+                    continue
+                amount = Decimal(str(random.choice([50000, 75000, 100000, 150000, 200000])))
+                pay_day = random.randint(1, 28)
+                date_received = timezone.make_aware(
+                    timezone.datetime(year, month, pay_day, 9, 0)
+                )
+                Payment.objects.create(
+                    member=member,
+                    keluarga=None,
+                    payment_type=pkss,
+                    amount=amount,
+                    date_received=date_received,
+                    period_month=month,
+                    period_year=year,
+                    recorded_by=recorder,
+                )
+                payments_created += 1
 
         self.stdout.write(f"  Created {payments_created} payments")
         self.stdout.write(self.style.SUCCESS("Dummy data seeded successfully!"))

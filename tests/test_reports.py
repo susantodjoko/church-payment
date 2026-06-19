@@ -17,10 +17,11 @@ class ReportViewTest(TestCase):
         self.member = Member.objects.create(
             member_id='001', full_name='Budi', gender='M',
             join_date=date.today(), lingkungan=l)
-        self.pt = PaymentType.objects.get(name='Asuransi Kematian')
+        self.pt, _ = PaymentType.objects.get_or_create(
+            name='Iuran PKSS', defaults={'is_active': True})
         Payment.objects.create(
             member=self.member, payment_type=self.pt, amount=50000,
-            date_paid=timezone.now(), period_month=6, period_year=2026,
+            date_received=timezone.now(), period_month=6, period_year=2026,
             recorded_by=self.user)
 
     def test_monthly_report_200(self):

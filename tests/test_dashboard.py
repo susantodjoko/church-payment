@@ -17,11 +17,12 @@ class DashboardTest(TestCase):
         self.member = Member.objects.create(
             member_id='001', full_name='Budi', gender='M',
             join_date=date.today(), lingkungan=l)
-        self.pt = PaymentType.objects.get(name='Asuransi Kematian')
+        self.pt, _ = PaymentType.objects.get_or_create(
+            name='Iuran PKSS', defaults={'is_active': True})
         now = timezone.now()
         Payment.objects.create(
             member=self.member, payment_type=self.pt, amount=75000,
-            date_paid=now, period_month=now.month, period_year=now.year,
+            date_received=now, period_month=now.month, period_year=now.year,
             recorded_by=self.user)
 
     def test_dashboard_shows_this_month_total(self):
