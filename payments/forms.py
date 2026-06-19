@@ -21,9 +21,9 @@ class PaymentForm(forms.ModelForm):
 
     class Meta:
         model = Payment
-        fields = ['payment_type', 'amount', 'date_paid', 'period_month', 'period_year', 'notes']
+        fields = ['payment_type', 'amount', 'date_received', 'period_month', 'period_year', 'notes']
         widgets = {
-            'date_paid': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'date_received': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'payment_type': forms.Select(attrs={'class': 'form-select'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '1000'}),
             'period_month': forms.Select(choices=[(i, i) for i in range(1, 13)], attrs={'class': 'form-select'}),
@@ -35,7 +35,7 @@ class PaymentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['payment_type'].queryset = PaymentType.objects.filter(is_active=True)
         now = timezone.localtime(timezone.now())
-        self.fields['date_paid'].initial = now.strftime('%Y-%m-%dT%H:%M')
+        self.fields['date_received'].initial = now.strftime('%Y-%m-%dT%H:%M')
         self.fields['period_month'].initial = now.month
         self.fields['period_year'].initial = now.year
         self.fields['notes'].required = False
