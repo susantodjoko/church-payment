@@ -5,8 +5,14 @@
 <form method="post" class="mt-3" style="max-width:600px">
   {% csrf_token %}
   <input type="hidden" name="member_id" id="member-id-hidden" value="">
+  <input type="hidden" name="keluarga_id" id="keluarga-id-hidden" value="">
 
-  <div class="mb-3 position-relative">
+  <div class="mb-3">
+    <label class="form-label">Jenis Pembayaran *</label>
+    {{ form.payment_type }}
+  </div>
+
+  <div class="mb-3 position-relative" id="member-field">
     <label class="form-label">Anggota *</label>
     <div class="position-relative">
       <input type="text" id="member-search-input" class="form-control"
@@ -14,19 +20,32 @@
              autocomplete="off"
              hx-get="/members/search/"
              hx-trigger="keyup changed delay:300ms"
-             hx-target="#search-results"
-             hx-indicator="#search-spinner"
+             hx-target="#member-search-results"
+             hx-indicator="#member-search-spinner"
              name="q">
-      <span id="search-spinner" class="htmx-indicator spinner-border spinner-border-sm text-secondary position-absolute"
+      <span id="member-search-spinner" class="htmx-indicator spinner-border spinner-border-sm text-secondary position-absolute"
             style="right:10px;top:10px" role="status"></span>
     </div>
-    <div id="search-results" class="position-relative"></div>
+    <div id="member-search-results" class="position-relative"></div>
   </div>
 
-  <div class="mb-3">
-    <label class="form-label">Jenis Pembayaran *</label>
-    {{ form.payment_type }}
+  <div class="mb-3 position-relative" id="keluarga-field" style="display:none">
+    <label class="form-label">Keluarga (KK) *</label>
+    <div class="position-relative">
+      <input type="text" id="keluarga-search-input" class="form-control"
+             placeholder="Ketik nomor atau nama KK..."
+             autocomplete="off"
+             hx-get="/members/keluarga/search/"
+             hx-trigger="keyup changed delay:300ms"
+             hx-target="#keluarga-search-results"
+             hx-indicator="#keluarga-search-spinner"
+             name="q">
+      <span id="keluarga-search-spinner" class="htmx-indicator spinner-border spinner-border-sm text-secondary position-absolute"
+            style="right:10px;top:10px" role="status"></span>
+    </div>
+    <div id="keluarga-search-results" class="position-relative"></div>
   </div>
+
   <div class="row g-3 mb-3">
     <div class="col-6">
       <label class="form-label">Bulan Periode *</label>
@@ -42,8 +61,8 @@
     {{ form.amount }}
   </div>
   <div class="mb-3">
-    <label class="form-label">Tanggal &amp; Waktu Bayar *</label>
-    {{ form.date_paid }}
+    <label class="form-label">Tanggal &amp; Waktu Terima *</label>
+    {{ form.date_received }}
   </div>
   <div class="mb-3">
     <label class="form-label">Catatan</label>
@@ -55,11 +74,31 @@
 </form>
 
 <script>
+const PKSS_NAME = 'Iuran PKSS';
+
 function selectMember(id, label) {
   document.getElementById('member-id-hidden').value = id;
   document.getElementById('member-search-input').value = label;
-  document.getElementById('search-results').innerHTML = '';
+  document.getElementById('member-search-results').innerHTML = '';
 }
+
+function selectKeluarga(id, label) {
+  document.getElementById('keluarga-id-hidden').value = id;
+  document.getElementById('keluarga-search-input').value = label;
+  document.getElementById('keluarga-search-results').innerHTML = '';
+}
+
+function togglePaymentFields() {
+  const select = document.getElementById('id_payment_type');
+  const selectedText = select.options[select.selectedIndex]?.text || '';
+  const isPKSS = selectedText === PKSS_NAME;
+  document.getElementById('member-field').style.display = isPKSS ? '' : 'none';
+  document.getElementById('keluarga-field').style.display = isPKSS ? 'none' : '';
+}
+
+document.getElementById('id_payment_type').addEventListener('change', togglePaymentFields);
+togglePaymentFields();
+
 {% if prefill_member %}
 document.addEventListener('DOMContentLoaded', function() {
   selectMember('{{ prefill_member.pk }}', '{{ prefill_member.full_name }} ({{ prefill_member.member_id }})');

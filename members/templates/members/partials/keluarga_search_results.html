@@ -1,0 +1,13 @@
+{% if results %}
+<ul class="list-group position-absolute w-100" style="z-index:1000;top:100%">
+  {% for kk in results %}
+  <li class="list-group-item list-group-item-action" style="cursor:pointer"
+      onclick="selectKeluarga('{{ kk.pk }}', '{{ kk.kk_number }} — {{ kk.name }}')">
+    <strong>{{ kk.kk_number }}</strong> — {{ kk.name }}
+    <small class="text-muted d-block">{{ kk.lingkungan }}</small>
+  </li>
+  {% endfor %}
+</ul>
+{% elif q|length >= 2 %}
+<div class="text-muted small mt-1">KK tidak ditemukan.</div>
+{% endif %}

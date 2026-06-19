@@ -2,8 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
+from django.db import models
 from church_payment.mixins import SuperAdminRequired
-from .models import Member, Wilayah, Lingkungan
+from .models import Member, Wilayah, Lingkungan, Keluarga
 from .forms import MemberForm
 
 
@@ -74,3 +75,16 @@ class MemberUpdateView(SuperAdminRequired, View):
             messages.success(request, 'Data anggota diperbarui.')
             return redirect('member_detail', pk=pk)
         return render(request, 'members/form.html', {'form': form, 'action': 'Edit', 'member': member})
+
+
+@login_required
+def keluarga_search(request):
+    """HTMX partial: returns KK search results for Record Payment page."""
+    q = request.GET.get('q', '').strip()
+    results = []
+    if len(q) >= 2:
+        results = Keluarga.objects.filter(
+            models.Q(kk_number__icontains=q) | models.Q(name__icontains=q),
+            is_active=True
+        ).select_related('lingkungan')[:10]
+    return render(request, 'members/partials/keluarga_search_results.html', {'results': results, 'q': q})

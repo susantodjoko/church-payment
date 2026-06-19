@@ -4,50 +4,90 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from members.models import Member, Wilayah, Lingkungan
 from .models import Payment, PaymentType
-from .forms import PaymentForm
+from .forms import PaymentForm, PKSS_TYPE_NAME, KARTU_KUNING_TYPE_NAME
 
 
 @login_required
 def record_payment(request):
-    if request.method == 'POST':
-        form = PaymentForm(request.POST)
-        member_id = request.POST.get('member_id')
-        if form.is_valid() and member_id:
-            try:
-                member = Member.objects.get(pk=member_id)
-            except Member.DoesNotExist:
-                messages.error(request, 'Anggota tidak ditemukan.')
-                return render(request, 'payments/new.html', {'form': form})
-            payment = form.save(commit=False)
-            payment.member = member
-            payment.recorded_by = request.user
-            duplicate = Payment.objects.filter(
-                member=member,
-                payment_type=payment.payment_type,
-                period_month=payment.period_month,
-                period_year=payment.period_year,
-            ).exists()
-            if duplicate:
-                messages.error(
-                    request,
-                    f'Pembayaran {payment.payment_type} untuk {member.full_name} '
-                    f'periode {payment.period_month}/{payment.period_year} sudah pernah dicatat.'
-                )
-                return render(request, 'payments/new.html', {'form': form})
-            payment.save()
-            messages.success(request, f'Pembayaran untuk {member.full_name} berhasil dicatat.')
-            return redirect('payment_list')
-        else:
-            messages.error(request, 'Periksa kembali data yang dimasukkan.')
-    else:
-        form = PaymentForm()
-
     prefill_member = None
     if request.method == 'GET' and request.GET.get('member_id'):
         try:
             prefill_member = Member.objects.get(pk=request.GET.get('member_id'))
         except Member.DoesNotExist:
             pass
+
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment_type_name = payment.payment_type.name
+
+            if payment_type_name == PKSS_TYPE_NAME:
+                member_id = request.POST.get('member_id')
+                if not member_id:
+                    messages.error(request, 'Pilih anggota terlebih dahulu.')
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                try:
+                    member = Member.objects.get(pk=member_id)
+                except Member.DoesNotExist:
+                    messages.error(request, 'Anggota tidak ditemukan.')
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                duplicate = Payment.objects.filter(
+                    member=member,
+                    payment_type=payment.payment_type,
+                    period_month=payment.period_month,
+                    period_year=payment.period_year,
+                ).exists()
+                if duplicate:
+                    messages.error(
+                        request,
+                        f'Pembayaran {payment.payment_type} untuk {member.full_name} '
+                        f'periode {payment.period_month}/{payment.period_year} sudah pernah dicatat.'
+                    )
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                payment.member = member
+                payment.keluarga = None
+                subject_name = member.full_name
+
+            elif payment_type_name == KARTU_KUNING_TYPE_NAME:
+                keluarga_id = request.POST.get('keluarga_id')
+                if not keluarga_id:
+                    messages.error(request, 'Pilih Keluarga (KK) terlebih dahulu.')
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                try:
+                    from members.models import Keluarga
+                    keluarga = Keluarga.objects.get(pk=keluarga_id)
+                except Keluarga.DoesNotExist:
+                    messages.error(request, 'Keluarga tidak ditemukan.')
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                duplicate = Payment.objects.filter(
+                    keluarga=keluarga,
+                    payment_type=payment.payment_type,
+                    period_month=payment.period_month,
+                    period_year=payment.period_year,
+                ).exists()
+                if duplicate:
+                    messages.error(
+                        request,
+                        f'Pembayaran {payment.payment_type} untuk {keluarga} '
+                        f'periode {payment.period_month}/{payment.period_year} sudah pernah dicatat.'
+                    )
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                payment.keluarga = keluarga
+                payment.member = None
+                subject_name = str(keluarga)
+            else:
+                messages.error(request, 'Jenis pembayaran tidak valid.')
+                return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+
+            payment.recorded_by = request.user
+            payment.save()
+            messages.success(request, f'Pembayaran untuk {subject_name} berhasil dicatat.')
+            return redirect('payment_list')
+        else:
+            messages.error(request, 'Periksa kembali data yang dimasukkan.')
+    else:
+        form = PaymentForm()
 
     return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
 
