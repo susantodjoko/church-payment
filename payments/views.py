@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -194,6 +195,8 @@ class LaporanMasukView(SuperAdminRequired, View):
 
 @login_required
 def confirm_laporan(request):
+    if not (request.user.is_superuser or request.user.groups.filter(name='Super Admin').exists()):
+        raise PermissionDenied
     if request.method != 'POST':
         return redirect('laporan_masuk')
     payment_ids = request.POST.getlist('payment_ids')
