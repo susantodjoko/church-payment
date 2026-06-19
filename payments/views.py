@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from members.models import Member, Wilayah, Lingkungan
+from members.models import Member, Wilayah, Lingkungan, Keluarga
 from .models import Payment, PaymentType
 from .forms import PaymentForm, PKSS_TYPE_NAME, KARTU_KUNING_TYPE_NAME
 
@@ -55,7 +55,6 @@ def record_payment(request):
                     messages.error(request, 'Pilih Keluarga (KK) terlebih dahulu.')
                     return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
                 try:
-                    from members.models import Keluarga
                     keluarga = Keluarga.objects.get(pk=keluarga_id)
                 except Keluarga.DoesNotExist:
                     messages.error(request, 'Keluarga tidak ditemukan.')
