@@ -48,7 +48,7 @@
     <select name="wilayah" class="form-select">
       <option value="">Semua Wilayah</option>
       {% for w in wilayah_list %}
-      <option value="{{ w.pk }}">{{ w.name }}</option>
+      <option value="{{ w.pk }}" {% if selected_wilayah == w.pk|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
       {% endfor %}
     </select>
   </div>
@@ -73,13 +73,5 @@
   <div id="payment-table-body">
     {% include 'payments/partials/payment_table.html' %}
   </div>
-  {% if tab == 'belum' and payments %}
-  <div class="mt-3">
-    <button type="submit" class="btn btn-warning"
-            onclick="return confirm('Laporkan pembayaran yang dipilih ke Bendahara Utama?')">
-      Laporkan ke Bendahara Utama
-    </button>
-  </div>
-  {% endif %}
 </form>
 {% endblock %}

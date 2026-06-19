@@ -132,6 +132,7 @@ def payment_list(request):
         'wilayah_list': Wilayah.objects.all(),
         'lingkungan_list': Lingkungan.objects.select_related('wilayah').all(),
         'selected_payment_type': payment_type_id,
+        'selected_wilayah': wilayah_id,
         'months': range(1, 13),
         'years': range(now.year - 2, now.year + 2),
     }

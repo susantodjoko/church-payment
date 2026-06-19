@@ -54,6 +54,15 @@
   </table>
 </div>
 
+{% if tab == 'belum' and payments %}
+<div class="mt-3">
+  <button type="submit" class="btn btn-warning"
+          onclick="return confirm('Laporkan pembayaran yang dipilih ke Bendahara Utama?')">
+    Laporkan ke Bendahara Utama
+  </button>
+</div>
+{% endif %}
+
 <script>
 const selectAll = document.getElementById('select-all');
 if (selectAll) {
