@@ -31,32 +31,53 @@
   <div class="col-md-2">
     <button type="submit" class="btn btn-outline-secondary w-100">Filter</button>
   </div>
+  {% if is_super_admin %}
+  <div class="col-12">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" name="show_inactive" value="1"
+             id="show-inactive" {% if show_inactive %}checked{% endif %}
+             onchange="this.form.submit()">
+      <label class="form-check-label" for="show-inactive">Tampilkan anggota nonaktif</label>
+    </div>
+  </div>
+  {% endif %}
 </form>
 
 <div class="table-responsive">
   <table class="table table-hover table-striped">
     <thead class="table-dark">
       <tr>
-        <th>ID</th><th>Nama</th><th>Lingkungan</th><th>Wilayah</th><th>Telp</th><th></th>
+        <th>ID</th><th>Nama</th><th>Lingkungan</th><th>Wilayah</th><th>Telp</th><th>Status</th><th></th>
       </tr>
     </thead>
     <tbody>
       {% for m in members %}
-      <tr>
+      <tr class="{% if not m.is_active %}table-secondary text-muted{% endif %}">
         <td>{{ m.member_id }}</td>
         <td>{{ m.full_name }}</td>
         <td>{{ m.lingkungan.name }}</td>
         <td>{{ m.lingkungan.wilayah.name }}</td>
         <td>{{ m.phone|default:"-" }}</td>
         <td>
+          {% if m.is_active %}<span class="badge bg-success">Aktif</span>
+          {% else %}<span class="badge bg-secondary">Nonaktif</span>{% endif %}
+        </td>
+        <td>
           <a href="/members/{{ m.pk }}/" class="btn btn-sm btn-outline-primary">Detail</a>
           {% if is_super_admin %}
           <a href="/members/{{ m.pk }}/edit/" class="btn btn-sm btn-outline-secondary">Edit</a>
+          <form method="post" action="/members/{{ m.pk }}/toggle-active/" class="d-inline"
+                onsubmit="return confirm('{% if m.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %} {{ m.full_name }}?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm {% if m.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+              {% if m.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}
+            </button>
+          </form>
           {% endif %}
         </td>
       </tr>
       {% empty %}
-      <tr><td colspan="6" class="text-center text-muted">Tidak ada anggota ditemukan.</td></tr>
+      <tr><td colspan="7" class="text-center text-muted">Tidak ada anggota ditemukan.</td></tr>
       {% endfor %}
     </tbody>
   </table>

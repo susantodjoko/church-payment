@@ -10,7 +10,10 @@ from .forms import MemberForm
 
 @login_required
 def member_list(request):
-    qs = Member.objects.select_related('lingkungan__wilayah').filter(is_active=True)
+    show_inactive = request.GET.get('show_inactive') == '1'
+    qs = Member.objects.select_related('lingkungan__wilayah')
+    if not show_inactive:
+        qs = qs.filter(is_active=True)
     q = request.GET.get('q', '')
     wilayah_id = request.GET.get('wilayah', '')
     lingkungan_id = request.GET.get('lingkungan', '')
@@ -27,6 +30,7 @@ def member_list(request):
         'wilayah_list': Wilayah.objects.all(),
         'lingkungan_list': Lingkungan.objects.select_related('wilayah').all(),
         'q': q,
+        'show_inactive': show_inactive,
     })
 
 
@@ -47,6 +51,16 @@ def member_search(request):
             full_name__icontains=q, is_active=True
         ).select_related('lingkungan')[:10]
     return render(request, 'members/partials/search_results.html', {'members': members, 'q': q})
+
+
+class MemberToggleActiveView(SuperAdminRequired, View):
+    def post(self, request, pk):
+        member = get_object_or_404(Member, pk=pk)
+        member.is_active = not member.is_active
+        member.save(update_fields=['is_active'])
+        status = 'diaktifkan' if member.is_active else 'dinonaktifkan'
+        messages.success(request, f'{member.full_name} berhasil {status}.')
+        return redirect('member_list')
 
 
 class MemberCreateView(SuperAdminRequired, View):

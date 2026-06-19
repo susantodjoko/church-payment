@@ -7,11 +7,11 @@
     <div class="table-responsive">
       <table class="table table-striped">
         <thead class="table-dark">
-          <tr><th>No. KK</th><th>Nama Keluarga</th><th>Lingkungan</th><th>Wilayah</th><th>Status</th></tr>
+          <tr><th>No. KK</th><th>Nama Keluarga</th><th>Lingkungan</th><th>Wilayah</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
           {% for kk in keluarga_list %}
-          <tr>
+          <tr class="{% if not kk.is_active %}table-secondary text-muted{% endif %}">
             <td>{{ kk.kk_number }}</td>
             <td>{{ kk.name }}</td>
             <td>{{ kk.lingkungan.name }}</td>
@@ -20,9 +20,18 @@
               {% if kk.is_active %}<span class="badge bg-success">Aktif</span>
               {% else %}<span class="badge bg-secondary">Nonaktif</span>{% endif %}
             </td>
+            <td>
+              <form method="post" action="/settings/keluarga/{{ kk.pk }}/toggle-active/" class="d-inline"
+                    onsubmit="return confirm('{% if kk.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %} {{ kk.name }}?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm {% if kk.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                  {% if kk.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}
+                </button>
+              </form>
+            </td>
           </tr>
           {% empty %}
-          <tr><td colspan="5" class="text-muted text-center">Belum ada data Keluarga.</td></tr>
+          <tr><td colspan="6" class="text-muted text-center">Belum ada data Keluarga.</td></tr>
           {% endfor %}
         </tbody>
       </table>

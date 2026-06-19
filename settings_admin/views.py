@@ -66,6 +66,16 @@ class PaymentTypeListView(SuperAdminRequired, View):
         })
 
 
+class KeluargaToggleActiveView(SuperAdminRequired, View):
+    def post(self, request, pk):
+        kk = get_object_or_404(Keluarga, pk=pk)
+        kk.is_active = not kk.is_active
+        kk.save(update_fields=['is_active'])
+        status = 'diaktifkan' if kk.is_active else 'dinonaktifkan'
+        messages.success(request, f'{kk.name} berhasil {status}.')
+        return redirect('settings_keluarga')
+
+
 class KeluargaListView(SuperAdminRequired, View):
     def get(self, request):
         return render(request, 'settings_admin/keluarga.html', {
