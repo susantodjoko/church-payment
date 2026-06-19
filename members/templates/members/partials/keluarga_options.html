@@ -1,0 +1,6 @@
+<option value="">---------</option>
+{% for kk in results %}
+<option value="{{ kk.pk }}">{{ kk.kk_number }} — {{ kk.name }}</option>
+{% empty %}
+<option value="" disabled>Tidak ada KK di lingkungan ini</option>
+{% endfor %}

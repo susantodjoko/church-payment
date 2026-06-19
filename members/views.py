@@ -78,6 +78,18 @@ class MemberUpdateView(SuperAdminRequired, View):
 
 
 @login_required
+def keluarga_options(request):
+    """HTMX partial: <select> options for KK filtered by lingkungan (used on member form)."""
+    lingkungan_id = request.GET.get('lingkungan', '')
+    results = []
+    if lingkungan_id:
+        results = Keluarga.objects.filter(
+            lingkungan_id=lingkungan_id, is_active=True
+        ).order_by('kk_number')
+    return render(request, 'members/partials/keluarga_options.html', {'results': results})
+
+
+@login_required
 def keluarga_search(request):
     """HTMX partial: returns KK search results for Record Payment page."""
     q = request.GET.get('q', '').strip()
