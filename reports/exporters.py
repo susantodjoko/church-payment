@@ -18,7 +18,7 @@ def build_monthly_excel(payments, month, year):
     ws = wb.active
     ws.title = f'Laporan {month}-{year}'
     ws.cell(1, 1, f'Laporan Pembayaran Bulan {month}/{year}').font = Font(bold=True, size=14)
-    headers = ['No', 'Anggota', 'Lingkungan', 'Wilayah', 'Jenis', 'Jumlah (Rp)', 'Tgl Bayar', 'Dicatat oleh']
+    headers = ['No', 'Anggota', 'Lingkungan', 'Wilayah', 'Jenis', 'Jumlah (Rp)', 'Tgl Terima', 'Dicatat oleh']
     _header_style(ws, 3, headers)
     for i, p in enumerate(payments, 1):
         ws.append([
@@ -28,7 +28,7 @@ def build_monthly_excel(payments, month, year):
             p.member.lingkungan.wilayah.name,
             p.payment_type.name,
             float(p.amount),
-            p.date_paid.strftime('%d/%m/%Y %H:%M'),
+            p.date_received.strftime('%d/%m/%Y %H:%M'),
             p.recorded_by.get_full_name() or p.recorded_by.username,
         ])
     ws.append([])

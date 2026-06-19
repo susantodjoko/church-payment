@@ -31,7 +31,7 @@
 <div class="table-responsive">
   <table class="table table-sm table-striped">
     <thead class="table-light">
-      <tr><th>Periode</th><th>Jenis</th><th>Jumlah (Rp)</th><th>Tgl Bayar</th><th>Dicatat oleh</th></tr>
+      <tr><th>Periode</th><th>Jenis</th><th>Jumlah (Rp)</th><th>Tgl Terima</th><th>Dicatat oleh</th></tr>
     </thead>
     <tbody>
       {% for p in payments %}
@@ -39,7 +39,7 @@
         <td>{{ p.period_month }}/{{ p.period_year }}</td>
         <td>{{ p.payment_type.name }}</td>
         <td>{{ p.amount|idr }}</td>
-        <td>{{ p.date_paid|date:"d M Y H:i" }}</td>
+        <td>{{ p.date_received|date:"d M Y H:i" }}</td>
         <td>{{ p.recorded_by.get_full_name|default:p.recorded_by.username }}</td>
       </tr>
       {% empty %}
