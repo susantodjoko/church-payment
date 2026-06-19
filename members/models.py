@@ -49,6 +49,7 @@ class Member(models.Model):
     phone = models.CharField(max_length=20, null=True, blank=True)
     join_date = models.DateField()
     lingkungan = models.ForeignKey(Lingkungan, on_delete=models.PROTECT, related_name='members')
+    keluarga = models.ForeignKey(Keluarga, on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
     is_active = models.BooleanField(default=True)
 
     class Meta:

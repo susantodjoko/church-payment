@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from members.models import Lingkungan, Member, Wilayah
+from members.models import Keluarga, Lingkungan, Member, Wilayah
 from payments.models import Payment, PaymentType
 
 
@@ -24,6 +24,24 @@ LINGKUNGAN_DATA = [
     ("Lingkungan Santo Yohanes", "Wilayah Timur"),
     ("Lingkungan Santa Maria", "Wilayah Barat"),
     ("Lingkungan Santo Yusuf", "Wilayah Tengah"),
+]
+
+KK_DATA = [
+    ("KK001", "Keluarga Hartono",        "Lingkungan Santo Petrus"),
+    ("KK002", "Keluarga Kusuma",          "Lingkungan Santo Petrus"),
+    ("KK003", "Keluarga Santoso",         "Lingkungan Santo Petrus"),
+    ("KK004", "Keluarga Wijaya",          "Lingkungan Santo Paulus"),
+    ("KK005", "Keluarga Setiawan",        "Lingkungan Santo Paulus"),
+    ("KK006", "Keluarga Lestari",         "Lingkungan Santo Paulus"),
+    ("KK007", "Keluarga Purnomo",         "Lingkungan Santo Yohanes"),
+    ("KK008", "Keluarga Rahayu",          "Lingkungan Santo Yohanes"),
+    ("KK009", "Keluarga Suryadi",         "Lingkungan Santo Yohanes"),
+    ("KK010", "Keluarga Wahyuni",         "Lingkungan Santa Maria"),
+    ("KK011", "Keluarga Budiman",         "Lingkungan Santa Maria"),
+    ("KK012", "Keluarga Anggraini",       "Lingkungan Santa Maria"),
+    ("KK013", "Keluarga Wibowo",          "Lingkungan Santo Yusuf"),
+    ("KK014", "Keluarga Pratiwi",         "Lingkungan Santo Yusuf"),
+    ("KK015", "Keluarga Susanto",         "Lingkungan Santo Yusuf"),
 ]
 
 MEMBERS_DATA = [
@@ -95,6 +113,7 @@ class Command(BaseCommand):
             self.stdout.write("Clearing existing data...")
             Payment.objects.all().delete()
             Member.objects.all().delete()
+            Keluarga.objects.all().delete()
             Lingkungan.objects.all().delete()
             Wilayah.objects.all().delete()
 
@@ -117,6 +136,22 @@ class Command(BaseCommand):
             lingkungan_map[ling_name] = l
             if created:
                 self.stdout.write(f"  + {ling_name} ({wil_name})")
+
+        # Create Keluarga (KK)
+        self.stdout.write("Creating 15 keluarga (KK)...")
+        kk_map = {}
+        for kk_number, kk_name, ling_name in KK_DATA:
+            kk, created = Keluarga.objects.get_or_create(
+                kk_number=kk_number,
+                defaults=dict(
+                    name=kk_name,
+                    lingkungan=lingkungan_map[ling_name],
+                    is_active=True,
+                ),
+            )
+            kk_map[kk_number] = kk
+            if created:
+                self.stdout.write(f"  + {kk_number} {kk_name}")
 
         # Create Members (10 per lingkungan)
         self.stdout.write("Creating 50 members...")
@@ -148,6 +183,24 @@ class Command(BaseCommand):
                 members_created += 1
         self.stdout.write(f"  Created {members_created} members")
 
+        # Assign members to KK (round-robin within same lingkungan)
+        self.stdout.write("Assigning members to Keluarga...")
+        assigned = 0
+        for ling_obj in lingkungan_map.values():
+            ling_members = list(
+                Member.objects.filter(lingkungan=ling_obj, keluarga=None)
+            )
+            ling_kk = list(
+                Keluarga.objects.filter(lingkungan=ling_obj, is_active=True)
+            )
+            if not ling_kk:
+                continue
+            for i, member in enumerate(ling_members):
+                member.keluarga = ling_kk[i % len(ling_kk)]
+                member.save(update_fields=['keluarga'])
+                assigned += 1
+        self.stdout.write(f"  Assigned {assigned} members to Keluarga")
+
         # Seed payments for the last 6 months
         recorder = User.objects.filter(is_superuser=True).first()
         if not recorder:
@@ -171,10 +224,16 @@ class Command(BaseCommand):
             name='Iuran PKSS',
             defaults={'description': 'Iuran PKSS per anggota', 'is_active': True}
         )
-        # Ensure it is active even if it already existed but was deactivated
         if not pkss.is_active:
             pkss.is_active = True
             pkss.save()
+        kartu_kuning, _ = PaymentType.objects.get_or_create(
+            name='Iuran Kartu Kuning',
+            defaults={'description': 'Iuran Kartu Kuning per KK', 'is_active': True}
+        )
+        if not kartu_kuning.is_active:
+            kartu_kuning.is_active = True
+            kartu_kuning.save()
 
         self.stdout.write("Creating payments for last 6 months...")
         today = date.today()
@@ -208,5 +267,39 @@ class Command(BaseCommand):
                 )
                 payments_created += 1
 
-        self.stdout.write(f"  Created {payments_created} payments")
+        self.stdout.write(f"  Created {payments_created} PKSS payments")
+
+        # Seed Iuran Kartu Kuning for each KK for last 6 months
+        self.stdout.write("Creating Kartu Kuning payments for KK...")
+        kk_payments_created = 0
+        for kk in Keluarga.objects.filter(is_active=True):
+            for months_ago in range(6):
+                month = today.month - months_ago
+                year = today.year
+                if month <= 0:
+                    month += 12
+                    year -= 1
+                if Payment.objects.filter(
+                    keluarga=kk, member=None, payment_type=kartu_kuning,
+                    period_month=month, period_year=year
+                ).exists():
+                    continue
+                amount = Decimal('50000')
+                pay_day = random.randint(1, 28)
+                date_received = timezone.make_aware(
+                    timezone.datetime(year, month, pay_day, 10, 0)
+                )
+                Payment.objects.create(
+                    member=None,
+                    keluarga=kk,
+                    payment_type=kartu_kuning,
+                    amount=amount,
+                    date_received=date_received,
+                    period_month=month,
+                    period_year=year,
+                    recorded_by=recorder,
+                )
+                kk_payments_created += 1
+
+        self.stdout.write(f"  Created {kk_payments_created} Kartu Kuning payments")
         self.stdout.write(self.style.SUCCESS("Dummy data seeded successfully!"))

@@ -18,6 +18,7 @@
       <dt class="col-sm-4">Telepon</dt><dd class="col-sm-8">{{ member.phone|default:"-" }}</dd>
       <dt class="col-sm-4">Alamat</dt><dd class="col-sm-8">{{ member.address|default:"-" }}</dd>
       <dt class="col-sm-4">Lingkungan</dt><dd class="col-sm-8">{{ member.lingkungan }}</dd>
+      <dt class="col-sm-4">Keluarga (KK)</dt><dd class="col-sm-8">{{ member.keluarga|default:"-" }}</dd>
       <dt class="col-sm-4">Bergabung</dt><dd class="col-sm-8">{{ member.join_date }}</dd>
       <dt class="col-sm-4">Status</dt><dd class="col-sm-8">
         {% if member.is_active %}<span class="badge bg-success">Aktif</span>
