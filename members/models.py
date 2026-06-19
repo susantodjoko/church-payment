@@ -24,6 +24,20 @@ class Lingkungan(models.Model):
         return f'{self.name} ({self.wilayah.name})'
 
 
+class Keluarga(models.Model):
+    kk_number = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=255)
+    lingkungan = models.ForeignKey(Lingkungan, on_delete=models.PROTECT, related_name='keluarga_set')
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['lingkungan__name', 'kk_number']
+        verbose_name_plural = 'Keluarga'
+
+    def __str__(self):
+        return f'{self.kk_number} — {self.name}'
+
+
 class Member(models.Model):
     GENDER_CHOICES = [('M', 'Laki-laki'), ('F', 'Perempuan')]
 
