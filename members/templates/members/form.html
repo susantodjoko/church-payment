@@ -21,7 +21,7 @@
       <div class="col-md-6">
         <label class="form-label">Keluarga (KK)</label>
         <div id="keluarga-select-wrap">
-          <select name="keluarga" class="form-control">
+          <select id="keluarga-select" name="keluarga" class="form-control">
             <option value="">---------</option>
             {% for kk in form.keluarga.field.queryset %}
             <option value="{{ kk.pk }}" {% if form.keluarga.value == kk.pk|stringformat:"s" %}selected{% endif %}>

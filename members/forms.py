@@ -21,9 +21,10 @@ class MemberForm(forms.ModelForm):
             field.widget.attrs.setdefault('class', 'form-control')
         self.fields['lingkungan'].queryset = Lingkungan.objects.select_related('wilayah')
         self.fields['lingkungan'].widget.attrs.update({
-            'hx-get': '/members/keluarga-options/',
-            'hx-target': '#keluarga-select-wrap',
+            'hx-get': '/members/keluarga/options/',
+            'hx-target': '#keluarga-select',
             'hx-trigger': 'change',
+            'hx-swap': 'innerHTML',
         })
         self.fields['keluarga'].required = False
         self.fields['keluarga'].label = 'Keluarga (KK)'
