@@ -21,7 +21,7 @@ def index(request):
 
     recent_payments = Payment.objects.select_related(
         'member', 'payment_type'
-    ).order_by('-date_paid')[:10]
+    ).order_by('-date_received')[:10]
 
     wilayah_stats = []
     for w in Wilayah.objects.all():

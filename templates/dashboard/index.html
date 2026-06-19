@@ -70,7 +70,7 @@
         <td>{{ p.payment_type.name }}</td>
         <td>{{ p.period_month }}/{{ p.period_year }}</td>
         <td>{{ p.amount|idr }}</td>
-        <td>{{ p.date_paid|date:"d M Y H:i" }}</td>
+        <td>{{ p.date_received|date:"d M Y H:i" }}</td>
       </tr>
       {% empty %}
       <tr><td colspan="5" class="text-muted">Belum ada pembayaran.</td></tr>
