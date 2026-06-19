@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from members.models import Wilayah, Lingkungan
+from members.models import Wilayah, Lingkungan, Keluarga
 from payments.models import PaymentType
 
 
@@ -54,4 +54,16 @@ class PaymentTypeForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class KeluargaForm(forms.ModelForm):
+    class Meta:
+        model = Keluarga
+        fields = ['kk_number', 'name', 'lingkungan', 'is_active']
+        widgets = {
+            'kk_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'lingkungan': forms.Select(attrs={'class': 'form-select'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

@@ -3,9 +3,9 @@ from django.contrib.auth.models import User, Group
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from church_payment.mixins import SuperAdminRequired
-from members.models import Wilayah, Lingkungan
+from members.models import Wilayah, Lingkungan, Keluarga
 from payments.models import PaymentType
-from .forms import UserCreateForm, WilayahForm, LingkunganForm, PaymentTypeForm
+from .forms import UserCreateForm, WilayahForm, LingkunganForm, PaymentTypeForm, KeluargaForm
 
 
 class UserListView(SuperAdminRequired, View):
@@ -63,4 +63,23 @@ class PaymentTypeListView(SuperAdminRequired, View):
             return redirect('settings_payment_types')
         return render(request, 'settings_admin/payment_types.html', {
             'payment_types': PaymentType.objects.all(), 'form': form
+        })
+
+
+class KeluargaListView(SuperAdminRequired, View):
+    def get(self, request):
+        return render(request, 'settings_admin/keluarga.html', {
+            'keluarga_list': Keluarga.objects.select_related('lingkungan__wilayah').all(),
+            'form': KeluargaForm(),
+        })
+
+    def post(self, request):
+        form = KeluargaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Keluarga berhasil ditambahkan.')
+            return redirect('settings_keluarga')
+        return render(request, 'settings_admin/keluarga.html', {
+            'keluarga_list': Keluarga.objects.select_related('lingkungan__wilayah').all(),
+            'form': form,
         })
