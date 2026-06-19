@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import models
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from members.models import Member, Wilayah, Lingkungan, Keluarga
@@ -99,21 +100,34 @@ def payment_list(request):
     payment_type_id = request.GET.get('payment_type', '')
     wilayah_id = request.GET.get('wilayah', '')
     lingkungan_id = request.GET.get('lingkungan', '')
+    tab = request.GET.get('tab', 'belum')  # 'belum' or 'sudah'
 
     qs = Payment.objects.filter(
-        period_month=month, period_year=year
-    ).select_related('member__lingkungan__wilayah', 'payment_type', 'recorded_by')
+        period_month=month, period_year=year,
+        recorded_by=request.user,
+    ).select_related('member__lingkungan__wilayah', 'keluarga__lingkungan', 'payment_type', 'recorded_by')
 
     if payment_type_id:
         qs = qs.filter(payment_type_id=payment_type_id)
     if wilayah_id:
-        qs = qs.filter(member__lingkungan__wilayah_id=wilayah_id)
+        qs = qs.filter(
+            models.Q(member__lingkungan__wilayah_id=wilayah_id) |
+            models.Q(keluarga__lingkungan__wilayah_id=wilayah_id)
+        )
     if lingkungan_id:
-        qs = qs.filter(member__lingkungan_id=lingkungan_id)
+        qs = qs.filter(
+            models.Q(member__lingkungan_id=lingkungan_id) |
+            models.Q(keluarga__lingkungan_id=lingkungan_id)
+        )
+
+    if tab == 'sudah':
+        payments = qs.filter(date_reported__isnull=False)
+    else:
+        payments = qs.filter(date_reported__isnull=True)
 
     context = {
-        'payments': qs,
-        'month': month, 'year': year,
+        'payments': payments,
+        'month': month, 'year': year, 'tab': tab,
         'payment_types': PaymentType.objects.filter(is_active=True),
         'wilayah_list': Wilayah.objects.all(),
         'lingkungan_list': Lingkungan.objects.select_related('wilayah').all(),
@@ -125,3 +139,21 @@ def payment_list(request):
     if request.htmx:
         return render(request, 'payments/partials/payment_table.html', context)
     return render(request, 'payments/list.html', context)
+
+
+@login_required
+def batch_report(request):
+    if request.method != 'POST':
+        return redirect('payment_list')
+    payment_ids = request.POST.getlist('payment_ids')
+    if not payment_ids:
+        messages.error(request, 'Pilih minimal satu pembayaran untuk dilaporkan.')
+        return redirect('payment_list')
+    now = timezone.now()
+    updated = Payment.objects.filter(
+        pk__in=payment_ids,
+        recorded_by=request.user,
+        date_reported__isnull=True,
+    ).update(date_reported=now)
+    messages.success(request, f'{updated} pembayaran berhasil dilaporkan ke Bendahara Utama.')
+    return redirect('payment_list')

@@ -1,13 +1,27 @@
 {% extends 'base.html' %}
+{% load idr_filters %}
 {% block title %}Daftar Pembayaran{% endblock %}
 {% block content %}
 <h3>Daftar Pembayaran</h3>
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item">
+    <a class="nav-link {% if tab == 'belum' %}active{% endif %}"
+       href="?tab=belum&month={{ month }}&year={{ year }}">Belum Dilaporkan</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if tab == 'sudah' %}active{% endif %}"
+       href="?tab=sudah&month={{ month }}&year={{ year }}">Sudah Dilaporkan</a>
+  </li>
+</ul>
+
 <div class="row g-2 mb-3 align-items-center"
      hx-get="/payments/"
      hx-trigger="change from:select, change from:input[type=number]"
      hx-target="#payment-table-body"
      hx-indicator="#table-spinner"
-     hx-include="[name='month'],[name='year'],[name='payment_type'],[name='wilayah'],[name='lingkungan']">
+     hx-include="[name='month'],[name='year'],[name='payment_type'],[name='wilayah'],[name='lingkungan'],[name='tab']">
+  <input type="hidden" name="tab" value="{{ tab }}">
   <div class="col-auto">
     <select name="month" class="form-select">
       {% for m in months %}
@@ -47,14 +61,25 @@
     </select>
   </div>
   <div class="col-auto">
-    <a href="/payments/" class="btn btn-outline-secondary">Reset</a>
+    <a href="/payments/?tab={{ tab }}" class="btn btn-outline-secondary">Reset</a>
   </div>
   <div class="col-auto">
     <span id="table-spinner" class="htmx-indicator spinner-border spinner-border-sm text-secondary" role="status"></span>
   </div>
 </div>
 
-<div id="payment-table-body">
-  {% include 'payments/partials/payment_table.html' %}
-</div>
+<form method="post" action="/payments/batch-report/" id="batch-form">
+  {% csrf_token %}
+  <div id="payment-table-body">
+    {% include 'payments/partials/payment_table.html' %}
+  </div>
+  {% if tab == 'belum' and payments %}
+  <div class="mt-3">
+    <button type="submit" class="btn btn-warning"
+            onclick="return confirm('Laporkan pembayaran yang dipilih ke Bendahara Utama?')">
+      Laporkan ke Bendahara Utama
+    </button>
+  </div>
+  {% endif %}
+</form>
 {% endblock %}
