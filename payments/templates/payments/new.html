@@ -99,9 +99,22 @@ function togglePaymentFields() {
 document.getElementById('id_payment_type').addEventListener('change', togglePaymentFields);
 togglePaymentFields();
 
-{% if prefill_member %}
+{% if prefill_member or prefill_payment_type_id or prefill_month or prefill_year %}
 document.addEventListener('DOMContentLoaded', function() {
+  {% if prefill_payment_type_id %}
+  const select = document.getElementById('id_payment_type');
+  select.value = '{{ prefill_payment_type_id }}';
+  togglePaymentFields();
+  {% endif %}
+  {% if prefill_member %}
   selectMember('{{ prefill_member.pk }}', '{{ prefill_member.full_name }} ({{ prefill_member.member_id }})');
+  {% endif %}
+  {% if prefill_month %}
+  document.getElementById('id_period_month').value = '{{ prefill_month }}';
+  {% endif %}
+  {% if prefill_year %}
+  document.getElementById('id_period_year').value = '{{ prefill_year }}';
+  {% endif %}
 });
 {% endif %}
 </script>

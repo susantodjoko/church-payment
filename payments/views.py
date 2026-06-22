@@ -14,11 +14,19 @@ from .forms import PaymentForm, PKSS_TYPE_NAME, KARTU_KUNING_TYPE_NAME
 @login_required
 def record_payment(request):
     prefill_member = None
-    if request.method == 'GET' and request.GET.get('member_id'):
-        try:
-            prefill_member = Member.objects.get(pk=request.GET.get('member_id'))
-        except Member.DoesNotExist:
-            pass
+    prefill_payment_type_id = ''
+    prefill_month = ''
+    prefill_year = ''
+
+    if request.method == 'GET':
+        if request.GET.get('member_id'):
+            try:
+                prefill_member = Member.objects.get(pk=request.GET.get('member_id'))
+            except Member.DoesNotExist:
+                pass
+        prefill_payment_type_id = request.GET.get('payment_type_id', '')
+        prefill_month = request.GET.get('month', '')
+        prefill_year = request.GET.get('year', '')
 
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -92,7 +100,13 @@ def record_payment(request):
     else:
         form = PaymentForm()
 
-    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+    return render(request, 'payments/new.html', {
+        'form': form,
+        'prefill_member': prefill_member,
+        'prefill_payment_type_id': prefill_payment_type_id,
+        'prefill_month': prefill_month,
+        'prefill_year': prefill_year,
+    })
 
 
 @login_required

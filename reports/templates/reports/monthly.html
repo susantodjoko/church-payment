@@ -25,7 +25,7 @@
   </div>
   <div class="col-auto">
     <select name="payment_type" class="form-select">
-      <option value="">Semua Jenis</option>
+      <option value="">Pilih Iuran</option>
       {% for pt in payment_types %}
       <option value="{{ pt.pk }}" {% if payment_type_id == pt.pk|stringformat:"s" %}selected{% endif %}>{{ pt.name }}</option>
       {% endfor %}

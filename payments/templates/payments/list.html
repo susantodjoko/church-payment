@@ -6,11 +6,11 @@
 
 <ul class="nav nav-tabs mb-3">
   <li class="nav-item">
-    <a class="nav-link {% if tab == 'belum' %}active{% endif %}"
+    <a id="tab-link-belum" class="nav-link {% if tab == 'belum' %}active{% endif %}"
        href="?tab=belum&month={{ month }}&year={{ year }}">Belum Dilaporkan</a>
   </li>
   <li class="nav-item">
-    <a class="nav-link {% if tab == 'sudah' %}active{% endif %}"
+    <a id="tab-link-sudah" class="nav-link {% if tab == 'sudah' %}active{% endif %}"
        href="?tab=sudah&month={{ month }}&year={{ year }}">Sudah Dilaporkan</a>
   </li>
 </ul>
@@ -38,7 +38,7 @@
   </div>
   <div class="col-auto">
     <select name="payment_type" class="form-select">
-      <option value="">Semua Jenis</option>
+      <option value="">Pilih Iuran</option>
       {% for pt in payment_types %}
       <option value="{{ pt.pk }}" {% if selected_payment_type == pt.pk|stringformat:"s" %}selected{% endif %}>{{ pt.name }}</option>
       {% endfor %}
@@ -61,12 +61,43 @@
     </select>
   </div>
   <div class="col-auto">
-    <a href="/payments/?tab={{ tab }}" class="btn btn-outline-secondary">Reset</a>
+    <a id="reset-btn" href="/payments/?tab={{ tab }}&month={{ month }}&year={{ year }}" class="btn btn-outline-secondary">Reset</a>
   </div>
   <div class="col-auto">
     <span id="table-spinner" class="htmx-indicator spinner-border spinner-border-sm text-secondary" role="status"></span>
   </div>
 </div>
+
+<script>
+function syncNavLinks() {
+  const month = document.querySelector('[name="month"]').value;
+  const year = document.querySelector('[name="year"]').value;
+  const paymentType = document.querySelector('[name="payment_type"]').value;
+  const wilayah = document.querySelector('[name="wilayah"]').value;
+  const lingkungan = document.querySelector('[name="lingkungan"]').value;
+  const tab = document.querySelector('[name="tab"]').value;
+
+  ['belum', 'sudah'].forEach(function(t) {
+    const link = document.getElementById('tab-link-' + t);
+    if (!link) return;
+    const params = new URLSearchParams({ tab: t, month: month, year: year });
+    if (paymentType) params.set('payment_type', paymentType);
+    if (wilayah) params.set('wilayah', wilayah);
+    if (lingkungan) params.set('lingkungan', lingkungan);
+    link.href = '?' + params.toString();
+  });
+
+  const resetBtn = document.getElementById('reset-btn');
+  if (resetBtn) {
+    resetBtn.href = '/payments/?tab=' + tab + '&month=' + month + '&year=' + year;
+  }
+}
+
+document.querySelectorAll('[name="month"],[name="year"],[name="payment_type"],[name="wilayah"],[name="lingkungan"]').forEach(function(el) {
+  el.addEventListener('change', syncNavLinks);
+});
+syncNavLinks();
+</script>
 
 <form method="post" action="/payments/batch-report/" id="batch-form">
   {% csrf_token %}

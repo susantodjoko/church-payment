@@ -24,7 +24,7 @@
   </div>
   <div class="col-auto">
     <select name="payment_type" class="form-select">
-      <option value="">Semua Jenis</option>
+      <option value="">Pilih Iuran</option>
       {% for pt in payment_types %}
       <option value="{{ pt.pk }}" {% if payment_type_id == pt.pk|stringformat:"s" %}selected{% endif %}>{{ pt.name }}</option>
       {% endfor %}
@@ -49,7 +49,7 @@
       <tr>
         <td>{{ forloop.counter }}</td>
         <td>{{ m.member_id }}</td>
-        <td><a href="/payments/new/?member_id={{ m.pk }}">{{ m.full_name }}</a></td>
+        <td><a href="/payments/new/?member_id={{ m.pk }}&month={{ month }}&year={{ year }}{% if payment_type_id %}&payment_type_id={{ payment_type_id }}{% endif %}">{{ m.full_name }}</a></td>
         <td>{{ m.lingkungan.name }}</td>
         <td>{{ m.lingkungan.wilayah.name }}</td>
         <td>{{ m.phone|default:"-" }}</td>
