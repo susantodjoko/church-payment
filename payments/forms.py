@@ -1,5 +1,6 @@
 from django import forms
 from django.core.validators import MinValueValidator
+from django.db.models import Case, When, IntegerField, Value
 from django.utils import timezone
 from .models import Payment, PaymentType
 
@@ -53,7 +54,11 @@ class PaymentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['payment_type'].queryset = PaymentType.objects.filter(is_active=True)
+        self.fields['payment_type'].empty_label = None
+        self.fields['payment_type'].queryset = PaymentType.objects.filter(is_active=True).order_by(
+            Case(When(name=PKSS_TYPE_NAME, then=Value(0)), default=Value(1), output_field=IntegerField()),
+            'name',
+        )
         now = timezone.localtime(timezone.now())
         self.fields['date_received'].initial = now.strftime('%Y-%m-%dT%H:%M')
         self.fields['period_month'].initial = now.month
