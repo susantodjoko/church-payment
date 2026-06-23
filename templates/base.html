@@ -24,7 +24,10 @@
         <li class="nav-item"><a class="nav-link" href="/reports/">Laporan</a></li>
         {% if is_super_admin %}
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'laporan_masuk' %}">Laporan Masuk</a>
+          <a class="nav-link d-flex align-items-center gap-1" href="{% url 'laporan_masuk' %}">
+            Notifikasi
+            {% if unconfirmed_count %}<span class="badge bg-danger rounded-pill">{{ unconfirmed_count }}</span>{% endif %}
+          </a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Pengaturan</a>
