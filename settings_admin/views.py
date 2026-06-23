@@ -1,9 +1,11 @@
 import csv
+from datetime import date
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
@@ -140,6 +142,10 @@ class UploadAnggotaView(SuperAdminRequired, View):
             messages.error(request, 'File harus berformat CSV (.csv).')
             return render(request, 'settings_admin/upload_anggota.html')
 
+        if uploaded.size > 5 * 1024 * 1024:
+            messages.error(request, 'File terlalu besar. Maksimal ukuran 5 MB.')
+            return render(request, 'settings_admin/upload_anggota.html')
+
         try:
             rows = parse_anggota_csv(uploaded)
         except ValueError as e:
@@ -172,21 +178,26 @@ class UploadAnggotaView(SuperAdminRequired, View):
 
         valid_rows = [r for r in rows if r['status'] == 'valid']
 
-        Member.objects.bulk_create([
-            Member(
-                member_id=r['member_id'],
-                full_name=r['full_name'],
-                gender=r['gender'],
-                join_date=r['join_date'],
-                lingkungan_id=r['lingkungan_id'],
-                keluarga_id=r['keluarga_id'],
-                date_of_birth=r['date_of_birth'],
-                phone=r['phone'],
-                address=r['address'],
-            )
-            for r in valid_rows
-        ])
+        try:
+            Member.objects.bulk_create([
+                Member(
+                    member_id=r['member_id'],
+                    full_name=r['full_name'],
+                    gender=r['gender'],
+                    join_date=date.fromisoformat(r['join_date']),
+                    lingkungan_id=r['lingkungan_id'],
+                    keluarga_id=r['keluarga_id'],
+                    date_of_birth=date.fromisoformat(r['date_of_birth']) if r['date_of_birth'] else None,
+                    phone=r['phone'],
+                    address=r['address'],
+                )
+                for r in valid_rows
+            ])
+        except IntegrityError:
+            messages.error(request, 'Import gagal: terjadi konflik data. Silakan upload ulang.')
+            return redirect('upload_anggota')
+        finally:
+            request.session.pop(self.SESSION_KEY, None)
 
-        del request.session[self.SESSION_KEY]
         messages.success(request, f'{len(valid_rows)} anggota berhasil diimport.')
         return redirect('member_list')

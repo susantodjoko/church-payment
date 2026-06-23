@@ -44,6 +44,10 @@ def _validate_row(raw, row_num, lingkungan_map, existing_ids, keluarga_map):
 
     if not member_id:
         errors.append('member_id wajib diisi')
+    if member_id and len(member_id) > 20:
+        errors.append('member_id maksimal 20 karakter')
+    if phone and len(phone) > 20:
+        errors.append('phone maksimal 20 karakter')
     if not full_name:
         errors.append('full_name wajib diisi')
     if not gender:
@@ -100,4 +104,5 @@ def _validate_row(raw, row_num, lingkungan_map, existing_ids, keluarga_map):
         return {**base, 'status': 'conflict',
                 'error': f'member_id "{member_id}" sudah ada di database'}
 
+    existing_ids.add(member_id)
     return {**base, 'status': 'valid', 'error': None}
