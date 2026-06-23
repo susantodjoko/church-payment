@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from church_payment.mixins import SuperAdminRequired
-from members.models import Wilayah, Lingkungan, Keluarga
+from members.models import Wilayah, Lingkungan, Keluarga, Member
 from payments.models import PaymentType
 from .forms import UserCreateForm, WilayahForm, LingkunganForm, PaymentTypeForm, KeluargaForm
 from settings_admin.csv_utils import parse_anggota_csv
@@ -165,5 +165,28 @@ class UploadAnggotaView(SuperAdminRequired, View):
         })
 
     def _confirm(self, request):
-        # implemented in Task 4
-        return render(request, 'settings_admin/upload_anggota.html')
+        rows = request.session.get(self.SESSION_KEY)
+        if not rows:
+            messages.warning(request, 'Sesi telah berakhir. Silakan upload ulang.')
+            return redirect('upload_anggota')
+
+        valid_rows = [r for r in rows if r['status'] == 'valid']
+
+        Member.objects.bulk_create([
+            Member(
+                member_id=r['member_id'],
+                full_name=r['full_name'],
+                gender=r['gender'],
+                join_date=r['join_date'],
+                lingkungan_id=r['lingkungan_id'],
+                keluarga_id=r['keluarga_id'],
+                date_of_birth=r['date_of_birth'],
+                phone=r['phone'],
+                address=r['address'],
+            )
+            for r in valid_rows
+        ])
+
+        del request.session[self.SESSION_KEY]
+        messages.success(request, f'{len(valid_rows)} anggota berhasil diimport.')
+        return redirect('member_list')

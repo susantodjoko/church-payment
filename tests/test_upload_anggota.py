@@ -216,3 +216,57 @@ class UploadPreviewTest(TestCase):
     def test_preview_shows_error_count(self):
         response = self._upload(',Budi,M,2024-01-15,St. Maria,,,,')
         self.assertEqual(response.context['error_count'], 1)
+
+
+class UploadConfirmTest(TestCase):
+    def setUp(self):
+        Group.objects.get_or_create(name='Super Admin')
+        Group.objects.get_or_create(name='Treasurer')
+        self.admin = make_super_admin()
+        self.client.login(username='admin', password='pass')
+        self.w = Wilayah.objects.create(name='W1')
+        self.l = Lingkungan.objects.create(name='St. Maria', wilayah=self.w)
+
+    def _do_preview(self, rows_str):
+        header = 'member_id,full_name,gender,join_date,lingkungan,date_of_birth,phone,address,keluarga_kk'
+        content = (header + '\n' + rows_str).encode('utf-8')
+        f = io.BytesIO(content)
+        f.name = 'upload.csv'
+        self.client.post('/settings/upload-anggota/',
+                         {'action': 'preview', 'csv_file': f})
+
+    def test_confirm_creates_members_and_redirects(self):
+        self._do_preview('BML001,Budi Santoso,M,2024-01-15,St. Maria,,,,')
+        response = self.client.post('/settings/upload-anggota/', {'action': 'confirm'})
+        self.assertRedirects(response, '/members/')
+        self.assertTrue(Member.objects.filter(member_id='BML001').exists())
+        m = Member.objects.get(member_id='BML001')
+        self.assertEqual(m.full_name, 'Budi Santoso')
+        self.assertEqual(m.lingkungan, self.l)
+
+    def test_confirm_clears_session(self):
+        self._do_preview('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        self.client.post('/settings/upload-anggota/', {'action': 'confirm'})
+        self.assertNotIn('upload_anggota_preview', self.client.session)
+
+    def test_confirm_shows_success_message(self):
+        self._do_preview('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        response = self.client.post('/settings/upload-anggota/',
+                                    {'action': 'confirm'}, follow=True)
+        self.assertContains(response, '1 anggota berhasil diimport')
+
+    def test_confirm_skips_conflict_rows(self):
+        Member.objects.create(member_id='BML001', full_name='Existing',
+                               gender='M', join_date=date.today(), lingkungan=self.l)
+        self._do_preview(
+            'BML001,Budi,M,2024-01-15,St. Maria,,,,\n'
+            'BML002,Sari,F,2024-02-20,St. Maria,,,,'
+        )
+        self.client.post('/settings/upload-anggota/', {'action': 'confirm'})
+        self.assertFalse(Member.objects.filter(member_id='BML001',
+                                               full_name='Budi').exists())
+        self.assertTrue(Member.objects.filter(member_id='BML002').exists())
+
+    def test_confirm_without_session_redirects_to_upload(self):
+        response = self.client.post('/settings/upload-anggota/', {'action': 'confirm'})
+        self.assertRedirects(response, '/settings/upload-anggota/')
