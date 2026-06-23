@@ -1,5 +1,8 @@
+import csv
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from church_payment.mixins import SuperAdminRequired
@@ -93,3 +96,33 @@ class KeluargaListView(SuperAdminRequired, View):
             'keluarga_list': Keluarga.objects.select_related('lingkungan__wilayah').all(),
             'form': form,
         })
+
+
+def download_anggota_template(request):
+    if not request.user.is_authenticated:
+        from django.contrib.auth.views import redirect_to_login
+        return redirect_to_login(request.get_full_path())
+    if not (request.user.is_superuser or request.user.groups.filter(name='Super Admin').exists()):
+        raise PermissionDenied
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="template_anggota.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['member_id', 'full_name', 'gender', 'join_date', 'lingkungan',
+                     'date_of_birth', 'phone', 'address', 'keluarga_kk'])
+    writer.writerow(['BML001', 'Budi Santoso', 'M', '2024-01-15', 'St. Maria',
+                     '1990-05-10', '08123456789', 'Jl. Contoh No. 1', ''])
+    writer.writerow(['BML002', 'Sari Dewi', 'F', '2024-02-20', 'St. Yoseph',
+                     '', '08987654321', '', ''])
+    return response
+
+
+class UploadAnggotaView(SuperAdminRequired, View):
+    SESSION_KEY = 'upload_anggota_preview'
+
+    def get(self, request):
+        return render(request, 'settings_admin/upload_anggota.html')
+
+    def post(self, request):
+        # stubs — implemented in later tasks
+        return render(request, 'settings_admin/upload_anggota.html')
