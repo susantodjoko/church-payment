@@ -8,6 +8,14 @@ from payments.models import Payment, PaymentType
 from .exporters import build_monthly_excel, build_annual_excel, build_unpaid_excel
 
 
+def _recorded_by_filter(request):
+    is_admin = (
+        request.user.is_superuser
+        or request.user.groups.filter(name='Super Admin').exists()
+    )
+    return {} if is_admin else {'recorded_by': request.user}
+
+
 def _get_filter_context(request):
     now = timezone.localtime(timezone.now())
     return {
@@ -34,7 +42,8 @@ def report_index(request):
 def monthly_report(request):
     f = _get_filter_context(request)
     qs = Payment.objects.filter(
-        period_month=f['month'], period_year=f['year']
+        period_month=f['month'], period_year=f['year'],
+        **_recorded_by_filter(request),
     ).select_related('member__lingkungan__wilayah', 'payment_type', 'recorded_by')
 
     if f['payment_type_id']:
@@ -61,11 +70,12 @@ def annual_report(request):
     f = _get_filter_context(request)
     year = f['year']
 
+    rb = _recorded_by_filter(request)
     monthly_totals = []
     for m in range(1, 13):
-        total = Payment.objects.filter(period_month=m, period_year=year).aggregate(
+        total = Payment.objects.filter(period_month=m, period_year=year, **rb).aggregate(
             t=Sum('amount'))['t'] or 0
-        count = Payment.objects.filter(period_month=m, period_year=year).count()
+        count = Payment.objects.filter(period_month=m, period_year=year, **rb).count()
         monthly_totals.append({'month': m, 'total': total, 'count': count})
 
     return render(request, 'reports/annual.html', {
@@ -112,7 +122,8 @@ def unpaid_report(request):
 def export_monthly(request):
     f = _get_filter_context(request)
     qs = list(Payment.objects.filter(
-        period_month=f['month'], period_year=f['year']
+        period_month=f['month'], period_year=f['year'],
+        **_recorded_by_filter(request),
     ).select_related('member__lingkungan__wilayah', 'payment_type', 'recorded_by'))
     buf = build_monthly_excel(qs, f['month'], f['year'])
     filename = f"laporan-{f['month']}-{f['year']}.xlsx"
@@ -126,17 +137,17 @@ def export_monthly(request):
 def export_annual(request):
     f = _get_filter_context(request)
     year = f['year']
+    rb = _recorded_by_filter(request)
     monthly_totals = []
     for m in range(1, 13):
-        total = Payment.objects.filter(period_month=m, period_year=year).aggregate(
+        total = Payment.objects.filter(period_month=m, period_year=year, **rb).aggregate(
             t=Sum('amount'))['t'] or 0
-        count = Payment.objects.filter(period_month=m, period_year=year).count()
+        count = Payment.objects.filter(period_month=m, period_year=year, **rb).count()
         monthly_totals.append([m, float(total), count])
-
     members = Member.objects.filter(is_active=True).select_related('lingkungan__wilayah')
     member_summary = []
     for mem in members:
-        payments = Payment.objects.filter(member=mem, period_year=year)
+        payments = Payment.objects.filter(member=mem, period_year=year, **rb)
         months_paid = payments.values('period_month').distinct().count()
         total = payments.aggregate(t=Sum('amount'))['t'] or 0
         member_summary.append([
