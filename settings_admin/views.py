@@ -1,6 +1,8 @@
 import csv
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -98,10 +100,8 @@ class KeluargaListView(SuperAdminRequired, View):
         })
 
 
+@login_required
 def download_anggota_template(request):
-    if not request.user.is_authenticated:
-        from django.contrib.auth.views import redirect_to_login
-        return redirect_to_login(request.get_full_path())
     if not (request.user.is_superuser or request.user.groups.filter(name='Super Admin').exists()):
         raise PermissionDenied
 
