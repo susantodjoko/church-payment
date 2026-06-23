@@ -60,9 +60,9 @@ def _validate_row(raw, row_num, lingkungan_map, existing_ids, keluarga_map):
         errors.append('join_date wajib diisi')
     else:
         try:
-            join_date = datetime.strptime(join_date_str, '%Y-%m-%d').date()
+            join_date = datetime.strptime(join_date_str, '%d/%m/%Y').date()
         except ValueError:
-            errors.append('join_date format harus YYYY-MM-DD')
+            errors.append('join_date format harus DD/MM/YYYY')
 
     lingkungan_id = None
     if not lingkungan_name:
@@ -77,9 +77,9 @@ def _validate_row(raw, row_num, lingkungan_map, existing_ids, keluarga_map):
     date_of_birth = None
     if date_of_birth_str:
         try:
-            date_of_birth = datetime.strptime(date_of_birth_str, '%Y-%m-%d').date().isoformat()
+            date_of_birth = datetime.strptime(date_of_birth_str, '%d/%m/%Y').date().isoformat()
         except ValueError:
-            errors.append('date_of_birth format harus YYYY-MM-DD')
+            errors.append('date_of_birth format harus DD/MM/YYYY')
 
     keluarga_id = keluarga_map.get(keluarga_kk) if keluarga_kk else None
 

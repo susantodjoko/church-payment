@@ -113,9 +113,9 @@ def download_anggota_template(request):
     writer = csv.writer(response)
     writer.writerow(['member_id', 'full_name', 'gender', 'join_date', 'lingkungan',
                      'date_of_birth', 'phone', 'address', 'keluarga_kk'])
-    writer.writerow(['BML001', 'Budi Santoso', 'M', '2024-01-15', 'St. Maria',
-                     '1990-05-10', '08123456789', 'Jl. Contoh No. 1', ''])
-    writer.writerow(['BML002', 'Sari Dewi', 'F', '2024-02-20', 'St. Yoseph',
+    writer.writerow(['BML001', 'Budi Santoso', 'M', '15/01/2024', 'St. Maria',
+                     '10/05/1990', '08123456789', 'Jl. Contoh No. 1', ''])
+    writer.writerow(['BML002', 'Sari Dewi', 'F', '20/02/2024', 'St. Yoseph',
                      '', '08987654321', '', ''])
     return response
 

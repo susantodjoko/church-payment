@@ -73,7 +73,7 @@ class ParseAnggotaCsvTest(TestCase):
         return io.BytesIO(content.encode('utf-8'))
 
     def test_valid_row_returns_valid_status(self):
-        f = self._csv(['BML001,Budi Santoso,M,2024-01-15,St. Maria,,08123,,'])
+        f = self._csv(['BML001,Budi Santoso,M,15/01/2024,St. Maria,,08123,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['status'], 'valid')
@@ -82,19 +82,19 @@ class ParseAnggotaCsvTest(TestCase):
         self.assertEqual(rows[0]['row'], 2)
 
     def test_missing_member_id_is_error(self):
-        f = self._csv([',Budi,M,2024-01-15,St. Maria,,,,'])
+        f = self._csv([',Budi,M,15/01/2024,St. Maria,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'error')
         self.assertIn('member_id', rows[0]['error'])
 
     def test_missing_full_name_is_error(self):
-        f = self._csv(['BML001,,M,2024-01-15,St. Maria,,,,'])
+        f = self._csv(['BML001,,M,15/01/2024,St. Maria,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'error')
         self.assertIn('full_name', rows[0]['error'])
 
     def test_invalid_gender_is_error(self):
-        f = self._csv(['BML001,Budi,X,2024-01-15,St. Maria,,,,'])
+        f = self._csv(['BML001,Budi,X,15/01/2024,St. Maria,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'error')
         self.assertIn('gender', rows[0]['error'])
@@ -106,7 +106,7 @@ class ParseAnggotaCsvTest(TestCase):
         self.assertIn('join_date', rows[0]['error'])
 
     def test_unknown_lingkungan_is_error(self):
-        f = self._csv(['BML001,Budi,M,2024-01-15,Unknown Lingkungan,,,,'])
+        f = self._csv(['BML001,Budi,M,15/01/2024,Unknown Lingkungan,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'error')
         self.assertIn('Lingkungan', rows[0]['error'])
@@ -114,33 +114,33 @@ class ParseAnggotaCsvTest(TestCase):
     def test_duplicate_member_id_is_conflict(self):
         Member.objects.create(member_id='BML001', full_name='Existing',
                                gender='M', join_date=date.today(), lingkungan=self.l)
-        f = self._csv(['BML001,Budi,M,2024-01-15,St. Maria,,,,'])
+        f = self._csv(['BML001,Budi,M,15/01/2024,St. Maria,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'conflict')
         self.assertIn('BML001', rows[0]['error'])
 
     def test_lingkungan_matched_case_insensitively(self):
-        f = self._csv(['BML001,Budi,M,2024-01-15,st. maria,,,,'])
+        f = self._csv(['BML001,Budi,M,15/01/2024,st. maria,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'valid')
         self.assertEqual(rows[0]['lingkungan_id'], self.l.pk)
 
     def test_unknown_keluarga_kk_ignored(self):
-        f = self._csv(['BML001,Budi,M,2024-01-15,St. Maria,,,,KK_NOT_EXIST'])
+        f = self._csv(['BML001,Budi,M,15/01/2024,St. Maria,,,,KK_NOT_EXIST'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'valid')
         self.assertIsNone(rows[0]['keluarga_id'])
 
     def test_invalid_date_of_birth_is_error(self):
-        f = self._csv(['BML001,Budi,M,2024-01-15,St. Maria,not-a-date,,,'])
+        f = self._csv(['BML001,Budi,M,15/01/2024,St. Maria,not-a-date,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'error')
         self.assertIn('date_of_birth', rows[0]['error'])
 
     def test_multiple_rows(self):
         f = self._csv([
-            'BML001,Budi,M,2024-01-15,St. Maria,,,,',
-            'BML002,Sari,F,2024-02-20,St. Maria,,,,',
+            'BML001,Budi,M,15/01/2024,St. Maria,,,,',
+            'BML002,Sari,F,20/02/2024,St. Maria,,,,',
         ])
         rows = parse_anggota_csv(f)
         self.assertEqual(len(rows), 2)
@@ -148,7 +148,7 @@ class ParseAnggotaCsvTest(TestCase):
         self.assertEqual(rows[1]['row'], 3)
 
     def test_optional_fields_can_be_empty(self):
-        f = self._csv(['BML001,Budi,M,2024-01-15,St. Maria,,,,'])
+        f = self._csv(['BML001,Budi,M,15/01/2024,St. Maria,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'valid')
         self.assertIsNone(rows[0]['date_of_birth'])
@@ -159,8 +159,8 @@ class ParseAnggotaCsvTest(TestCase):
     def test_intra_file_duplicate_member_id_is_conflict(self):
         """Second occurrence of same new member_id in one CSV → conflict"""
         f = self._csv([
-            'BML001,Budi,M,2024-01-15,St. Maria,,,,',
-            'BML001,Sari,F,2024-02-20,St. Maria,,,,',
+            'BML001,Budi,M,15/01/2024,St. Maria,,,,',
+            'BML001,Sari,F,20/02/2024,St. Maria,,,,',
         ])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'valid')
@@ -168,7 +168,7 @@ class ParseAnggotaCsvTest(TestCase):
 
     def test_member_id_too_long_is_error(self):
         long_id = 'B' * 21
-        f = self._csv([f'{long_id},Budi,M,2024-01-15,St. Maria,,,,'])
+        f = self._csv([f'{long_id},Budi,M,15/01/2024,St. Maria,,,,'])
         rows = parse_anggota_csv(f)
         self.assertEqual(rows[0]['status'], 'error')
         self.assertIn('member_id', rows[0]['error'])
@@ -197,7 +197,7 @@ class UploadPreviewTest(TestCase):
         self.assertNotIn('rows', response.context)
 
     def test_preview_valid_csv_shows_rows_in_context(self):
-        response = self._upload('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        response = self._upload('BML001,Budi,M,15/01/2024,St. Maria,,,,')
         self.assertEqual(response.status_code, 200)
         self.assertIn('rows', response.context)
         self.assertEqual(response.context['valid_count'], 1)
@@ -206,7 +206,7 @@ class UploadPreviewTest(TestCase):
         self.assertTrue(response.context['has_valid'])
 
     def test_preview_stores_rows_in_session(self):
-        self._upload('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        self._upload('BML001,Budi,M,15/01/2024,St. Maria,,,,')
         self.assertIn('upload_anggota_preview', self.client.session)
 
     def test_preview_no_file_shows_error_no_rows(self):
@@ -225,13 +225,13 @@ class UploadPreviewTest(TestCase):
     def test_preview_shows_conflict_count(self):
         Member.objects.create(member_id='BML001', full_name='X', gender='M',
                                join_date=date.today(), lingkungan=self.l)
-        response = self._upload('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        response = self._upload('BML001,Budi,M,15/01/2024,St. Maria,,,,')
         self.assertEqual(response.context['conflict_count'], 1)
         self.assertEqual(response.context['valid_count'], 0)
         self.assertFalse(response.context['has_valid'])
 
     def test_preview_shows_error_count(self):
-        response = self._upload(',Budi,M,2024-01-15,St. Maria,,,,')
+        response = self._upload(',Budi,M,15/01/2024,St. Maria,,,,')
         self.assertEqual(response.context['error_count'], 1)
 
     def test_preview_file_too_large_shows_error(self):
@@ -259,7 +259,7 @@ class UploadConfirmTest(TestCase):
                          {'action': 'preview', 'csv_file': f})
 
     def test_confirm_creates_members_and_redirects(self):
-        self._do_preview('BML001,Budi Santoso,M,2024-01-15,St. Maria,,,,')
+        self._do_preview('BML001,Budi Santoso,M,15/01/2024,St. Maria,,,,')
         response = self.client.post('/settings/upload-anggota/', {'action': 'confirm'})
         self.assertRedirects(response, '/members/')
         self.assertTrue(Member.objects.filter(member_id='BML001').exists())
@@ -268,12 +268,12 @@ class UploadConfirmTest(TestCase):
         self.assertEqual(m.lingkungan, self.l)
 
     def test_confirm_clears_session(self):
-        self._do_preview('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        self._do_preview('BML001,Budi,M,15/01/2024,St. Maria,,,,')
         self.client.post('/settings/upload-anggota/', {'action': 'confirm'})
         self.assertNotIn('upload_anggota_preview', self.client.session)
 
     def test_confirm_shows_success_message(self):
-        self._do_preview('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        self._do_preview('BML001,Budi,M,15/01/2024,St. Maria,,,,')
         response = self.client.post('/settings/upload-anggota/',
                                     {'action': 'confirm'}, follow=True)
         self.assertContains(response, '1 anggota berhasil diimport')
@@ -282,8 +282,8 @@ class UploadConfirmTest(TestCase):
         Member.objects.create(member_id='BML001', full_name='Existing',
                                gender='M', join_date=date.today(), lingkungan=self.l)
         self._do_preview(
-            'BML001,Budi,M,2024-01-15,St. Maria,,,,\n'
-            'BML002,Sari,F,2024-02-20,St. Maria,,,,'
+            'BML001,Budi,M,15/01/2024,St. Maria,,,,\n'
+            'BML002,Sari,F,20/02/2024,St. Maria,,,,'
         )
         self.client.post('/settings/upload-anggota/', {'action': 'confirm'})
         self.assertFalse(Member.objects.filter(member_id='BML001',
