@@ -155,3 +155,64 @@ class ParseAnggotaCsvTest(TestCase):
         self.assertIsNone(rows[0]['phone'])
         self.assertIsNone(rows[0]['address'])
         self.assertIsNone(rows[0]['keluarga_id'])
+
+
+class UploadPreviewTest(TestCase):
+    def setUp(self):
+        Group.objects.get_or_create(name='Super Admin')
+        Group.objects.get_or_create(name='Treasurer')
+        self.admin = make_super_admin()
+        self.client.login(username='admin', password='pass')
+        self.w = Wilayah.objects.create(name='W1')
+        self.l = Lingkungan.objects.create(name='St. Maria', wilayah=self.w)
+
+    def _upload(self, rows_str):
+        header = 'member_id,full_name,gender,join_date,lingkungan,date_of_birth,phone,address,keluarga_kk'
+        content = (header + '\n' + rows_str).encode('utf-8')
+        f = io.BytesIO(content)
+        f.name = 'upload.csv'
+        return self.client.post('/settings/upload-anggota/',
+                                {'action': 'preview', 'csv_file': f})
+
+    def test_get_returns_200_with_no_context_rows(self):
+        response = self.client.get('/settings/upload-anggota/')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('rows', response.context)
+
+    def test_preview_valid_csv_shows_rows_in_context(self):
+        response = self._upload('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('rows', response.context)
+        self.assertEqual(response.context['valid_count'], 1)
+        self.assertEqual(response.context['conflict_count'], 0)
+        self.assertEqual(response.context['error_count'], 0)
+        self.assertTrue(response.context['has_valid'])
+
+    def test_preview_stores_rows_in_session(self):
+        self._upload('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        self.assertIn('upload_anggota_preview', self.client.session)
+
+    def test_preview_no_file_shows_error_no_rows(self):
+        response = self.client.post('/settings/upload-anggota/', {'action': 'preview'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('rows', response.context)
+
+    def test_preview_non_csv_file_shows_error(self):
+        f = io.BytesIO(b'not a csv')
+        f.name = 'data.txt'
+        response = self.client.post('/settings/upload-anggota/',
+                                    {'action': 'preview', 'csv_file': f})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('rows', response.context)
+
+    def test_preview_shows_conflict_count(self):
+        Member.objects.create(member_id='BML001', full_name='X', gender='M',
+                               join_date=date.today(), lingkungan=self.l)
+        response = self._upload('BML001,Budi,M,2024-01-15,St. Maria,,,,')
+        self.assertEqual(response.context['conflict_count'], 1)
+        self.assertEqual(response.context['valid_count'], 0)
+        self.assertFalse(response.context['has_valid'])
+
+    def test_preview_shows_error_count(self):
+        response = self._upload(',Budi,M,2024-01-15,St. Maria,,,,')
+        self.assertEqual(response.context['error_count'], 1)

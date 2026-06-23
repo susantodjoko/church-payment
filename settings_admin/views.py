@@ -11,6 +11,7 @@ from church_payment.mixins import SuperAdminRequired
 from members.models import Wilayah, Lingkungan, Keluarga
 from payments.models import PaymentType
 from .forms import UserCreateForm, WilayahForm, LingkunganForm, PaymentTypeForm, KeluargaForm
+from settings_admin.csv_utils import parse_anggota_csv
 
 
 class UserListView(SuperAdminRequired, View):
@@ -124,5 +125,45 @@ class UploadAnggotaView(SuperAdminRequired, View):
         return render(request, 'settings_admin/upload_anggota.html')
 
     def post(self, request):
-        # stubs — implemented in later tasks
+        action = request.POST.get('action', 'preview')
+        if action == 'confirm':
+            return self._confirm(request)
+        return self._preview(request)
+
+    def _preview(self, request):
+        uploaded = request.FILES.get('csv_file')
+        if not uploaded:
+            messages.error(request, 'Pilih file CSV terlebih dahulu.')
+            return render(request, 'settings_admin/upload_anggota.html')
+
+        if not uploaded.name.lower().endswith('.csv'):
+            messages.error(request, 'File harus berformat CSV (.csv).')
+            return render(request, 'settings_admin/upload_anggota.html')
+
+        try:
+            rows = parse_anggota_csv(uploaded)
+        except ValueError as e:
+            messages.error(request, str(e))
+            return render(request, 'settings_admin/upload_anggota.html')
+
+        if not rows:
+            messages.warning(request, 'File CSV tidak memiliki baris data.')
+            return render(request, 'settings_admin/upload_anggota.html')
+
+        request.session[self.SESSION_KEY] = rows
+
+        valid = sum(1 for r in rows if r['status'] == 'valid')
+        conflicts = sum(1 for r in rows if r['status'] == 'conflict')
+        errors = sum(1 for r in rows if r['status'] == 'error')
+
+        return render(request, 'settings_admin/upload_anggota.html', {
+            'rows': rows,
+            'valid_count': valid,
+            'conflict_count': conflicts,
+            'error_count': errors,
+            'has_valid': valid > 0,
+        })
+
+    def _confirm(self, request):
+        # implemented in Task 4
         return render(request, 'settings_admin/upload_anggota.html')

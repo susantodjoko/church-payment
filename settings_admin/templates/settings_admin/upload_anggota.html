@@ -2,5 +2,71 @@
 {% block title %}Upload Anggota{% endblock %}
 {% block content %}
 <h3>Upload Anggota Massal</h3>
-<p>Stub — akan diimplementasikan.</p>
+
+{% if rows %}
+  <div class="alert {% if has_valid %}alert-info{% else %}alert-warning{% endif %} mb-3">
+    <strong>{{ valid_count }}</strong> valid &middot;
+    <strong>{{ conflict_count }}</strong> konflik &middot;
+    <strong>{{ error_count }}</strong> error
+    {% if not has_valid %}
+    &mdash; <em>Tidak ada baris yang dapat diimport.</em>
+    {% endif %}
+  </div>
+
+  <div class="table-responsive mb-3">
+    <table class="table table-sm table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th>Baris</th><th>Status</th><th>ID Anggota</th><th>Nama</th>
+          <th>Gender</th><th>Tgl Gabung</th><th>Lingkungan</th><th>Keterangan</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr class="{% if r.status == 'valid' %}table-success{% elif r.status == 'conflict' %}table-warning{% else %}table-danger{% endif %}">
+          <td>{{ r.row }}</td>
+          <td>
+            {% if r.status == 'valid' %}&#9989; Valid
+            {% elif r.status == 'conflict' %}&#9888;&#65039; Konflik
+            {% else %}&#10060; Error{% endif %}
+          </td>
+          <td>{{ r.member_id|default:"-" }}</td>
+          <td>{{ r.full_name|default:"-" }}</td>
+          <td>{{ r.gender|default:"-" }}</td>
+          <td>{{ r.join_date|default:"-" }}</td>
+          <td>{{ r.lingkungan|default:"-" }}</td>
+          <td>{{ r.error|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="confirm">
+    <button type="submit" class="btn btn-primary" {% if not has_valid %}disabled{% endif %}>
+      Konfirmasi Import ({{ valid_count }} anggota)
+    </button>
+    <a href="{% url 'upload_anggota' %}" class="btn btn-outline-secondary ms-2">Upload File Lain</a>
+  </form>
+
+{% else %}
+  <p class="text-muted mb-3">
+    Upload file CSV berisi data anggota.
+    <a href="{% url 'download_anggota_template' %}">Download template CSV</a>
+    untuk melihat format yang benar.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" style="max-width:520px">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="preview">
+    <div class="mb-3">
+      <label class="form-label fw-semibold">File CSV *</label>
+      <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+      <div class="form-text">Hanya file .csv yang diterima. Maksimal ukuran: 5 MB.</div>
+    </div>
+    <button type="submit" class="btn btn-primary">Preview</button>
+  </form>
+{% endif %}
 {% endblock %}
