@@ -21,6 +21,7 @@
               {% else %}<span class="badge bg-secondary">Nonaktif</span>{% endif %}
             </td>
             <td>
+              <a href="{% url 'keluarga_detail' kk.pk %}" class="btn btn-sm btn-outline-primary">Anggota</a>
               <form method="post" action="/settings/keluarga/{{ kk.pk }}/toggle-active/" class="d-inline"
                     onsubmit="return confirm('{% if kk.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %} {{ kk.name }}?')">
                 {% csrf_token %}

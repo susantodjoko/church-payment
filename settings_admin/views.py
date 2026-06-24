@@ -7,6 +7,7 @@ from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.http import HttpResponse
+from django.db import models as django_models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from church_payment.mixins import SuperAdminRequired
@@ -101,6 +102,41 @@ class KeluargaListView(SuperAdminRequired, View):
             'keluarga_list': Keluarga.objects.select_related('lingkungan__wilayah').all(),
             'form': form,
         })
+
+
+class KeluargaDetailView(SuperAdminRequired, View):
+    def get(self, request, pk):
+        kk = get_object_or_404(Keluarga, pk=pk)
+        q = request.GET.get('q', '').strip()
+        search_results = []
+        if len(q) >= 2:
+            search_results = Member.objects.filter(
+                django_models.Q(full_name__icontains=q) | django_models.Q(member_id__icontains=q),
+                is_active=True,
+            ).exclude(keluarga=kk).select_related('lingkungan')[:15]
+        return render(request, 'settings_admin/keluarga_detail.html', {
+            'kk': kk,
+            'members': kk.members.select_related('lingkungan').order_by('full_name'),
+            'q': q,
+            'search_results': search_results,
+        })
+
+    def post(self, request, pk):
+        kk = get_object_or_404(Keluarga, pk=pk)
+        action = request.POST.get('action')
+        member_pk = request.POST.get('member_pk')
+        member = get_object_or_404(Member, pk=member_pk)
+
+        if action == 'add':
+            member.keluarga = kk
+            member.save(update_fields=['keluarga'])
+            messages.success(request, f'{member.full_name} ditambahkan ke KK {kk.kk_number}.')
+        elif action == 'remove':
+            member.keluarga = None
+            member.save(update_fields=['keluarga'])
+            messages.success(request, f'{member.full_name} dihapus dari KK {kk.kk_number}.')
+
+        return redirect('keluarga_detail', pk=pk)
 
 
 @login_required

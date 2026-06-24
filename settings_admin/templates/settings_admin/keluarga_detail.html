@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}KK {{ kk.kk_number }} — {{ kk.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">{{ kk.kk_number }} — {{ kk.name }}</h3>
+    <small class="text-muted">{{ kk.lingkungan.name }} &bull; {{ kk.lingkungan.wilayah.name }}</small>
+  </div>
+  <a href="{% url 'settings_keluarga' %}" class="btn btn-outline-secondary">&larr; Kembali</a>
+</div>
+
+<div class="row g-4">
+  <!-- Current members -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>Anggota dalam KK ini</strong>
+        <span class="badge bg-primary">{{ members|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th>ID</th><th>Nama</th><th>Lingkungan</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for m in members %}
+            <tr>
+              <td class="text-muted small">{{ m.member_id }}</td>
+              <td>{{ m.full_name }}</td>
+              <td class="small">{{ m.lingkungan.name }}</td>
+              <td>
+                <form method="post" class="d-inline"
+                      onsubmit="return confirm('Hapus {{ m.full_name }} dari KK ini?')">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="remove">
+                  <input type="hidden" name="member_pk" value="{{ m.pk }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted py-3">Belum ada anggota.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add member search -->
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header"><strong>Tambah Anggota ke KK ini</strong></div>
+      <div class="card-body">
+        <form method="get" class="mb-3">
+          <div class="input-group">
+            <input type="text" name="q" value="{{ q }}" class="form-control"
+                   placeholder="Cari nama atau ID anggota...">
+            <button type="submit" class="btn btn-outline-secondary">Cari</button>
+          </div>
+          <small class="text-muted">Hanya menampilkan anggota yang belum masuk KK ini.</small>
+        </form>
+
+        {% if q %}
+        <table class="table table-sm">
+          <thead class="table-light">
+            <tr><th>ID</th><th>Nama</th><th>KK saat ini</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for m in search_results %}
+            <tr>
+              <td class="text-muted small">{{ m.member_id }}</td>
+              <td>{{ m.full_name }}</td>
+              <td class="small">{{ m.keluarga|default:"—" }}</td>
+              <td>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="add">
+                  <input type="hidden" name="member_pk" value="{{ m.pk }}">
+                  <button type="submit" class="btn btn-sm btn-outline-primary">Tambah</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted">Tidak ada anggota ditemukan.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
