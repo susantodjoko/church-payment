@@ -20,7 +20,12 @@ def member_list(request):
     lingkungan_id = request.GET.get('lingkungan', '')
 
     if q:
-        qs = qs.filter(models.Q(full_name__icontains=q) | models.Q(member_id__icontains=q))
+        qs = qs.filter(
+            models.Q(full_name__icontains=q) |
+            models.Q(member_id__icontains=q) |
+            models.Q(keluarga__kk_number__icontains=q) |
+            models.Q(keluarga__name__icontains=q)
+        )
     if wilayah_id:
         qs = qs.filter(lingkungan__wilayah_id=wilayah_id)
     if lingkungan_id:
