@@ -20,16 +20,18 @@
       {# KK dropdown — swapped by HTMX when lingkungan changes #}
       <div class="col-md-6">
         <label class="form-label">Keluarga (KK)</label>
-        <div id="keluarga-select-wrap">
-          <select id="keluarga-select" name="keluarga" class="form-control">
-            <option value="">---------</option>
-            {% for kk in form.keluarga.field.queryset %}
-            <option value="{{ kk.pk }}" {% if form.keluarga.value == kk.pk|stringformat:"s" %}selected{% endif %}>
-              {{ kk.kk_number }} — {{ kk.name }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
+        <select id="keluarga-select" name="keluarga" class="form-control">
+          <option value="">— Tidak ada KK —</option>
+          {% for kk in form.keluarga.field.queryset %}
+          <option value="{{ kk.pk }}"
+            {% if form.keluarga.value|stringformat:"s" == kk.pk|stringformat:"s" %}selected{% endif %}>
+            {{ kk.kk_number }} — {{ kk.name }}
+          </option>
+          {% endfor %}
+        </select>
+        {% if not form.keluarga.field.queryset %}
+        <small class="text-muted">Pilih Lingkungan terlebih dahulu untuk memuat daftar KK.</small>
+        {% endif %}
         {% if form.keluarga.errors %}
         <div class="text-danger small">{{ form.keluarga.errors|join:", " }}</div>
         {% endif %}
