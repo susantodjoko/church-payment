@@ -55,7 +55,8 @@ def member_search(request):
     members = []
     if len(q) >= 2:
         members = Member.objects.filter(
-            full_name__icontains=q, is_active=True
+            models.Q(full_name__icontains=q) | models.Q(member_id__icontains=q),
+            is_active=True,
         ).select_related('lingkungan')[:10]
     return render(request, 'members/partials/search_results.html', {'members': members, 'q': q})
 
