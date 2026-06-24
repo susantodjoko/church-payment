@@ -4,7 +4,7 @@ from django.db.models import Case, When, IntegerField, Value
 from django.utils import timezone
 from .models import Payment, PaymentType
 
-PKSS_TYPE_NAME = 'Iuran PKSS'
+PKSS_TYPE_NAME = 'Iuran PKKS'
 KARTU_KUNING_TYPE_NAME = 'Iuran Kartu Kuning'
 
 
