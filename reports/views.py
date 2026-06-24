@@ -100,13 +100,12 @@ def unpaid_report(request):
     month, year = f['month'], f['year']
     pt_id = f['payment_type_id']
 
-    paid_member_ids = Payment.objects.filter(
-        period_month=month, period_year=year,
-        **_recorded_by_filter(request),
+    paid_qs = Payment.objects.filter(
+        period_month=month, period_year=year, member__isnull=False,
     )
     if pt_id:
-        paid_member_ids = paid_member_ids.filter(payment_type_id=pt_id)
-    paid_member_ids = paid_member_ids.values_list('member_id', flat=True)
+        paid_qs = paid_qs.filter(payment_type_id=pt_id)
+    paid_member_ids = paid_qs.values_list('member_id', flat=True)
 
     unpaid = Member.objects.filter(
         is_active=True
@@ -176,13 +175,12 @@ def export_unpaid(request):
     f = _get_filter_context(request)
     month, year, pt_id = f['month'], f['year'], f['payment_type_id']
 
-    paid_ids = Payment.objects.filter(
-        period_month=month, period_year=year,
-        **_recorded_by_filter(request),
+    paid_qs = Payment.objects.filter(
+        period_month=month, period_year=year, member__isnull=False,
     )
     if pt_id:
-        paid_ids = paid_ids.filter(payment_type_id=pt_id)
-    paid_ids = paid_ids.values_list('member_id', flat=True)
+        paid_qs = paid_qs.filter(payment_type_id=pt_id)
+    paid_ids = paid_qs.values_list('member_id', flat=True)
 
     unpaid = list(Member.objects.filter(is_active=True).exclude(
         pk__in=paid_ids).select_related('lingkungan__wilayah'))
