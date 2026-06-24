@@ -116,8 +116,14 @@ def record_payment(request):
 @login_required
 def payment_list(request):
     now = timezone.localtime(timezone.now())
-    month = int(request.GET.get('month', now.month))
-    year = int(request.GET.get('year', now.year))
+    try:
+        month = int(request.GET.get('month', now.month))
+    except (ValueError, TypeError):
+        month = now.month
+    try:
+        year = int(request.GET.get('year', now.year))
+    except (ValueError, TypeError):
+        year = now.year
     payment_type_id = request.GET.get('payment_type', '')
     wilayah_id = request.GET.get('wilayah', '')
     lingkungan_id = request.GET.get('lingkungan', '')
@@ -154,6 +160,7 @@ def payment_list(request):
         'lingkungan_list': Lingkungan.objects.select_related('wilayah').all(),
         'selected_payment_type': payment_type_id,
         'selected_wilayah': wilayah_id,
+        'selected_lingkungan': lingkungan_id,
         'months': range(1, 13),
         'years': range(now.year - 2, now.year + 2),
     }
@@ -167,7 +174,7 @@ def payment_list(request):
 def batch_report(request):
     if request.method != 'POST':
         return redirect('payment_list')
-    payment_ids = request.POST.getlist('payment_ids')
+    payment_ids = request.POST.getlist('payment_ids')[:200]
     if not payment_ids:
         messages.error(request, 'Pilih minimal satu pembayaran untuk dilaporkan.')
         return redirect('payment_list')

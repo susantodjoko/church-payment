@@ -194,10 +194,9 @@ class UploadAnggotaView(SuperAdminRequired, View):
                 for r in valid_rows
             ])
         except IntegrityError:
-            messages.error(request, 'Import gagal: terjadi konflik data. Silakan upload ulang.')
+            messages.error(request, 'Import gagal: terjadi konflik data. Periksa kembali data dan coba lagi.')
             return redirect('upload_anggota')
-        finally:
-            request.session.pop(self.SESSION_KEY, None)
 
+        request.session.pop(self.SESSION_KEY, None)
         messages.success(request, f'{len(valid_rows)} anggota berhasil diimport.')
         return redirect('member_list')

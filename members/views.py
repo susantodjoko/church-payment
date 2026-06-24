@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.db import models
@@ -41,9 +42,10 @@ def member_detail(request, pk):
     return render(request, 'members/detail.html', {'member': member, 'payments': payments})
 
 
-@login_required
 def member_search(request):
     """HTMX partial: returns search results dropdown for Record Payment page."""
+    if not request.user.is_authenticated:
+        return HttpResponse('<p class="text-muted small mt-1">Sesi berakhir, silakan login ulang.</p>', status=200)
     q = request.GET.get('q', '').strip()
     members = []
     if len(q) >= 2:
@@ -103,9 +105,10 @@ def keluarga_options(request):
     return render(request, 'members/partials/keluarga_options.html', {'results': results})
 
 
-@login_required
 def keluarga_search(request):
     """HTMX partial: returns KK search results for Record Payment page."""
+    if not request.user.is_authenticated:
+        return HttpResponse('<p class="text-muted small mt-1">Sesi berakhir, silakan login ulang.</p>', status=200)
     q = request.GET.get('q', '').strip()
     results = []
     if len(q) >= 2:

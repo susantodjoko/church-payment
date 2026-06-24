@@ -15,7 +15,9 @@ def index(request):
     total_collected = this_month_payments.aggregate(t=Sum('amount'))['t'] or 0
     transaction_count = this_month_payments.count()
 
-    paid_ids = this_month_payments.values_list('member_id', flat=True).distinct()
+    paid_ids = this_month_payments.filter(
+        member__isnull=False
+    ).values_list('member_id', flat=True).distinct()
     total_members = Member.objects.filter(is_active=True).count()
     unpaid_count = total_members - Member.objects.filter(is_active=True, pk__in=paid_ids).count()
 

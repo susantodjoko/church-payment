@@ -48,9 +48,9 @@
     <tbody>
       {% for p in payments %}
       <tr>
-        <td>{{ p.member.full_name }}</td>
-        <td>{{ p.member.lingkungan.name }}</td>
-        <td>{{ p.member.lingkungan.wilayah.name }}</td>
+        <td>{% if p.member %}{{ p.member.full_name }}{% else %}{{ p.keluarga }}{% endif %}</td>
+        <td>{% if p.member %}{{ p.member.lingkungan.name }}{% elif p.keluarga %}{{ p.keluarga.lingkungan.name }}{% else %}-{% endif %}</td>
+        <td>{% if p.member %}{{ p.member.lingkungan.wilayah.name }}{% elif p.keluarga %}{{ p.keluarga.lingkungan.wilayah.name }}{% else %}-{% endif %}</td>
         <td>{{ p.payment_type.name }}</td>
         <td>{{ p.amount|idr }}</td>
         <td>{{ p.date_received|date:"d M Y" }}</td>

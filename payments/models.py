@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -40,6 +41,16 @@ class Payment(models.Model):
 
     class Meta:
         ordering = ['-period_year', '-period_month']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(member__isnull=False) | models.Q(keluarga__isnull=False),
+                name='payment_must_have_member_or_keluarga',
+            )
+        ]
+
+    def clean(self):
+        if not self.member_id and not self.keluarga_id:
+            raise ValidationError('Pembayaran harus memiliki Anggota atau Keluarga (KK).')
 
     def __str__(self):
         subject = self.member.full_name if self.member else str(self.keluarga)

@@ -21,11 +21,19 @@ def build_monthly_excel(payments, month, year):
     headers = ['No', 'Anggota', 'Lingkungan', 'Wilayah', 'Jenis', 'Jumlah (Rp)', 'Tgl Terima', 'Dicatat oleh']
     _header_style(ws, 3, headers)
     for i, p in enumerate(payments, 1):
+        if p.member:
+            subject = p.member.full_name
+            lingkungan = p.member.lingkungan.name
+            wilayah = p.member.lingkungan.wilayah.name
+        else:
+            subject = str(p.keluarga)
+            lingkungan = p.keluarga.lingkungan.name if p.keluarga else '-'
+            wilayah = p.keluarga.lingkungan.wilayah.name if p.keluarga else '-'
         ws.append([
             i,
-            p.member.full_name,
-            p.member.lingkungan.name,
-            p.member.lingkungan.wilayah.name,
+            subject,
+            lingkungan,
+            wilayah,
             p.payment_type.name,
             float(p.amount),
             p.date_received.strftime('%d/%m/%Y %H:%M'),

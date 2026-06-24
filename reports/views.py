@@ -18,9 +18,17 @@ def _recorded_by_filter(request):
 
 def _get_filter_context(request):
     now = timezone.localtime(timezone.now())
+    try:
+        month = int(request.GET.get('month', now.month))
+    except (ValueError, TypeError):
+        month = now.month
+    try:
+        year = int(request.GET.get('year', now.year))
+    except (ValueError, TypeError):
+        year = now.year
     return {
-        'month': int(request.GET.get('month', now.month)),
-        'year': int(request.GET.get('year', now.year)),
+        'month': month,
+        'year': year,
         'payment_type_id': request.GET.get('payment_type', ''),
         'wilayah_id': request.GET.get('wilayah', ''),
         'lingkungan_id': request.GET.get('lingkungan', ''),
@@ -44,7 +52,7 @@ def monthly_report(request):
     qs = Payment.objects.filter(
         period_month=f['month'], period_year=f['year'],
         **_recorded_by_filter(request),
-    ).select_related('member__lingkungan__wilayah', 'payment_type', 'recorded_by')
+    ).select_related('member__lingkungan__wilayah', 'keluarga__lingkungan__wilayah', 'payment_type', 'recorded_by')
 
     if f['payment_type_id']:
         qs = qs.filter(payment_type_id=f['payment_type_id'])
@@ -93,7 +101,8 @@ def unpaid_report(request):
     pt_id = f['payment_type_id']
 
     paid_member_ids = Payment.objects.filter(
-        period_month=month, period_year=year
+        period_month=month, period_year=year,
+        **_recorded_by_filter(request),
     )
     if pt_id:
         paid_member_ids = paid_member_ids.filter(payment_type_id=pt_id)
@@ -124,7 +133,7 @@ def export_monthly(request):
     qs = list(Payment.objects.filter(
         period_month=f['month'], period_year=f['year'],
         **_recorded_by_filter(request),
-    ).select_related('member__lingkungan__wilayah', 'payment_type', 'recorded_by'))
+    ).select_related('member__lingkungan__wilayah', 'keluarga__lingkungan__wilayah', 'payment_type', 'recorded_by'))
     buf = build_monthly_excel(qs, f['month'], f['year'])
     filename = f"laporan-{f['month']}-{f['year']}.xlsx"
     response = HttpResponse(buf.read(),
@@ -167,7 +176,10 @@ def export_unpaid(request):
     f = _get_filter_context(request)
     month, year, pt_id = f['month'], f['year'], f['payment_type_id']
 
-    paid_ids = Payment.objects.filter(period_month=month, period_year=year)
+    paid_ids = Payment.objects.filter(
+        period_month=month, period_year=year,
+        **_recorded_by_filter(request),
+    )
     if pt_id:
         paid_ids = paid_ids.filter(payment_type_id=pt_id)
     paid_ids = paid_ids.values_list('member_id', flat=True)
