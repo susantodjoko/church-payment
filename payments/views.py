@@ -18,6 +18,9 @@ def record_payment(request):
     prefill_month = ''
     prefill_year = ''
 
+    pkss_type = PaymentType.objects.filter(name=PKSS_TYPE_NAME, is_active=True).first()
+    pkss_type_id = pkss_type.pk if pkss_type else ''
+
     if request.method == 'GET':
         if request.GET.get('member_id'):
             try:
@@ -38,12 +41,12 @@ def record_payment(request):
                 member_id = request.POST.get('member_id')
                 if not member_id:
                     messages.error(request, 'Pilih anggota terlebih dahulu.')
-                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member, 'pkss_type_id': pkss_type_id})
                 try:
                     member = Member.objects.get(pk=member_id)
                 except Member.DoesNotExist:
                     messages.error(request, 'Anggota tidak ditemukan.')
-                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member, 'pkss_type_id': pkss_type_id})
                 duplicate = Payment.objects.filter(
                     member=member,
                     payment_type=payment.payment_type,
@@ -56,7 +59,7 @@ def record_payment(request):
                         f'Pembayaran {payment.payment_type} untuk {member.full_name} '
                         f'periode {payment.period_month}/{payment.period_year} sudah pernah dicatat.'
                     )
-                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member, 'pkss_type_id': pkss_type_id})
                 payment.member = member
                 payment.keluarga = None
                 subject_name = member.full_name
@@ -65,12 +68,12 @@ def record_payment(request):
                 keluarga_id = request.POST.get('keluarga_id')
                 if not keluarga_id:
                     messages.error(request, 'Pilih Keluarga (KK) terlebih dahulu.')
-                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member, 'pkss_type_id': pkss_type_id})
                 try:
                     keluarga = Keluarga.objects.get(pk=keluarga_id)
                 except Keluarga.DoesNotExist:
                     messages.error(request, 'Keluarga tidak ditemukan.')
-                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member, 'pkss_type_id': pkss_type_id})
                 duplicate = Payment.objects.filter(
                     keluarga=keluarga,
                     payment_type=payment.payment_type,
@@ -83,13 +86,13 @@ def record_payment(request):
                         f'Pembayaran {payment.payment_type} untuk {keluarga} '
                         f'periode {payment.period_month}/{payment.period_year} sudah pernah dicatat.'
                     )
-                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                    return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member, 'pkss_type_id': pkss_type_id})
                 payment.keluarga = keluarga
                 payment.member = None
                 subject_name = str(keluarga)
             else:
                 messages.error(request, 'Jenis pembayaran tidak valid.')
-                return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member})
+                return render(request, 'payments/new.html', {'form': form, 'prefill_member': prefill_member, 'pkss_type_id': pkss_type_id})
 
             payment.recorded_by = request.user
             payment.save()
@@ -106,6 +109,7 @@ def record_payment(request):
         'prefill_payment_type_id': prefill_payment_type_id,
         'prefill_month': prefill_month,
         'prefill_year': prefill_year,
+        'pkss_type_id': pkss_type_id,
     })
 
 

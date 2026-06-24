@@ -74,7 +74,7 @@
 </form>
 
 <script>
-const PKSS_NAME = 'Iuran PKSS';
+const PKSS_ID = '{{ pkss_type_id }}';
 
 function selectMember(id, label) {
   document.getElementById('member-id-hidden').value = id;
@@ -90,8 +90,7 @@ function selectKeluarga(id, label) {
 
 function togglePaymentFields() {
   const select = document.getElementById('id_payment_type');
-  const selectedText = select.options[select.selectedIndex]?.text || '';
-  const isPKSS = selectedText === PKSS_NAME;
+  const isPKSS = select.value === PKSS_ID;
   document.getElementById('member-field').style.display = isPKSS ? '' : 'none';
   document.getElementById('keluarga-field').style.display = isPKSS ? 'none' : '';
 }
