@@ -6,6 +6,7 @@ urlpatterns = [
     path('wilayah/', views.WilayahListView.as_view(), name='settings_wilayah'),
     path('lingkungan/', views.WilayahListView.as_view(), name='settings_lingkungan'),
     path('payment-types/', views.PaymentTypeListView.as_view(), name='settings_payment_types'),
+    path('lingkungan/<int:pk>/delete/', views.DeleteLingkunganView.as_view(), name='delete_lingkungan'),
     path('keluarga/', views.KeluargaListView.as_view(), name='settings_keluarga'),
     path('keluarga/<int:pk>/', views.KeluargaDetailView.as_view(), name='keluarga_detail'),
     path('keluarga/<int:pk>/toggle-active/', views.KeluargaToggleActiveView.as_view(), name='keluarga_toggle_active'),

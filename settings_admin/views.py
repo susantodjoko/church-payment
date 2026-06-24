@@ -6,6 +6,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
+from django.db.models import Count
 from django.http import HttpResponse
 from django.db import models as django_models
 from django.shortcuts import render, redirect, get_object_or_404
@@ -38,7 +39,7 @@ class WilayahListView(SuperAdminRequired, View):
     def get(self, request):
         return render(request, 'settings_admin/areas.html', {
             'wilayah_list': Wilayah.objects.all(),
-            'lingkungan_list': Lingkungan.objects.select_related('wilayah').all(),
+            'lingkungan_list': Lingkungan.objects.select_related('wilayah').annotate(member_count=Count('members')).all(),
             'wilayah_form': WilayahForm(),
             'lingkungan_form': LingkunganForm(),
         })
@@ -55,6 +56,21 @@ class WilayahListView(SuperAdminRequired, View):
                 form.save()
                 messages.success(request, 'Lingkungan ditambahkan.')
         return redirect('settings_wilayah')
+
+
+class DeleteLingkunganView(SuperAdminRequired, View):
+    def post(self, request, pk):
+        lingkungan = get_object_or_404(Lingkungan, pk=pk)
+        try:
+            name = lingkungan.name
+            lingkungan.delete()
+            messages.success(request, f'Lingkungan "{name}" berhasil dihapus.')
+        except Exception:
+            messages.error(
+                request,
+                f'Lingkungan "{lingkungan.name}" tidak bisa dihapus karena masih memiliki anggota atau keluarga.'
+            )
+        return redirect('settings_lingkungan')
 
 
 class PaymentTypeListView(SuperAdminRequired, View):

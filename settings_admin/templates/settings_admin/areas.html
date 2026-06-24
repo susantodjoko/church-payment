@@ -25,12 +25,27 @@
   <div class="col-md-7">
     <h5>Lingkungan</h5>
     <table class="table table-sm table-striped mb-3">
-      <thead class="table-dark"><tr><th>Nama</th><th>Wilayah</th></tr></thead>
+      <thead class="table-dark"><tr><th>Nama</th><th>Wilayah</th><th>Anggota</th><th></th></tr></thead>
       <tbody>
         {% for l in lingkungan_list %}
-        <tr><td>{{ l.name }}</td><td>{{ l.wilayah.name }}</td></tr>
+        <tr>
+          <td>{{ l.name }}</td>
+          <td>{{ l.wilayah.name }}</td>
+          <td>{{ l.member_count }}</td>
+          <td>
+            {% if l.member_count == 0 %}
+            <form method="post" action="{% url 'delete_lingkungan' l.pk %}" class="d-inline"
+                  onsubmit="return confirm('Hapus lingkungan {{ l.name }}?')">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
+            </form>
+            {% else %}
+            <span class="text-muted small">ada anggota</span>
+            {% endif %}
+          </td>
+        </tr>
         {% empty %}
-        <tr><td colspan="2" class="text-muted">Belum ada.</td></tr>
+        <tr><td colspan="4" class="text-muted">Belum ada.</td></tr>
         {% endfor %}
       </tbody>
     </table>
