@@ -9,4 +9,5 @@ urlpatterns = [
     path('export/monthly/', views.export_monthly, name='export_monthly'),
     path('export/annual/', views.export_annual, name='export_annual'),
     path('export/unpaid/', views.export_unpaid, name='export_unpaid'),
+    path('export/lk-pkss/', views.export_lk_pkss, name='export_lk_pkss'),
 ]

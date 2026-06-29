@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.db.models import Sum, Count
 from members.models import Member, Wilayah, Lingkungan
 from payments.models import Payment, PaymentType
-from .exporters import build_monthly_excel, build_annual_excel, build_unpaid_excel
+from .exporters import build_monthly_excel, build_annual_excel, build_unpaid_excel, build_lk_pkss_excel
 
 
 def _recorded_by_filter(request):
@@ -38,11 +38,13 @@ def _get_filter_context(request):
 
 @login_required
 def report_index(request):
+    now = timezone.localtime(timezone.now())
     return render(request, 'reports/index.html', {
         'payment_types': PaymentType.objects.filter(is_active=True),
         'wilayah_list': Wilayah.objects.all(),
-        'years': range(timezone.now().year - 3, timezone.now().year + 2),
+        'years': range(now.year - 3, now.year + 2),
         'months': range(1, 13),
+        'now': now,
     })
 
 
@@ -167,6 +169,36 @@ def export_annual(request):
     response = HttpResponse(buf.read(),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="laporan-tahunan-{year}.xlsx"'
+    return response
+
+
+@login_required
+def export_lk_pkss(request):
+    now = timezone.localtime(timezone.now())
+    try:
+        year = int(request.GET.get('year', now.year))
+    except (ValueError, TypeError):
+        year = now.year
+
+    lingkungan_list = list(
+        Lingkungan.objects.select_related('wilayah').order_by('wilayah__name', 'name')
+    )
+    pkss_payments = list(
+        Payment.objects.filter(
+            payment_type__name='Iuran PKKS',
+            period_year=year,
+        ).select_related(
+            'member__lingkungan__wilayah',
+            'keluarga__lingkungan__wilayah',
+        ).order_by('period_month', 'date_received')
+    )
+
+    buf = build_lk_pkss_excel(year, lingkungan_list, pkss_payments)
+    response = HttpResponse(
+        buf.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="LK-PKSS-{year}.xlsx"'
     return response
 
 
